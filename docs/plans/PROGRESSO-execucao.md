@@ -2,7 +2,7 @@
 
 Executado inline (sem subagentes) nesta sessão. TDD por tarefa.
 
-- [ ] Task 1 — esqueleto Django, login gate, base template
+- [x] Task 1 — esqueleto Django, login gate, base template (commit baf737d)
 - [ ] Task 2 — Bebedouro model + admin + seed
 - [ ] Task 3 — Coleta model + lista
 - [ ] Task 4 — criar coleta (data + aviso duplicada)
