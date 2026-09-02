@@ -2,10 +2,12 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render
 
+from .models import Coleta
+
 
 @login_required
 def coleta_list(request):
-    return render(request, "bebedouros/coleta_list.html", {"coletas": []})
+    return render(request, "bebedouros/coleta_list.html", {"coletas": Coleta.objects.all()})
 
 
 @login_required
