@@ -8,7 +8,9 @@
   <form method="post" action="{% url 'publicar' coleta.pk %}">
     {% csrf_token %}
     <input type="hidden" name="confirmar" value="1">
-    <button type="submit">Publicar mesmo assim</button>
-    <a href="{% url 'lancamento' coleta.pk %}">Voltar</a>
+    <div class="acoes">
+      <button type="submit" class="btn">Publicar mesmo assim</button>
+      <a class="btn secundario" href="{% url 'lancamento' coleta.pk %}">Voltar</a>
+    </div>
   </form>
 {% endblock %}

@@ -2,6 +2,10 @@ from django.contrib import admin
 
 from .models import Bebedouro
 
+admin.site.site_header = "Monitoramento e Gestão da Água — IFRN-CNAT"
+admin.site.site_title = "Monitoramento da Água"
+admin.site.index_title = "Cadastro e administração"
+
 
 @admin.register(Bebedouro)
 class BebedouroAdmin(admin.ModelAdmin):

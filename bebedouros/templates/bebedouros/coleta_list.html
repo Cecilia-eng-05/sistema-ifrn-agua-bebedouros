@@ -1,25 +1,29 @@
 {% extends "bebedouros/base.html" %}
 {% block conteudo %}
   <h1>Coletas</h1>
-  <p><a href="{% url 'coleta_nova' %}">+ Nova coleta</a></p>
+  <div class="acoes">
+    <a class="btn" href="{% url 'coleta_nova' %}">+ Nova coleta</a>
+  </div>
   {% if coletas %}
+    <div class="painel" style="margin-top:16px;">
     <table>
       <thead><tr><th>Data</th><th>Situação</th><th></th></tr></thead>
       <tbody>
       {% for coleta in coletas %}
         <tr>
-          <td>{{ coleta.data|date:"d/m/Y" }}</td>
+          <td class="cod">{{ coleta.data|date:"d/m/Y" }}</td>
           <td><span class="etiqueta {{ coleta.status }}">{{ coleta.get_status_display }}</span></td>
           <td>
             <a href="{% url 'lancamento' coleta.pk %}">Abrir</a>
-            &nbsp;|&nbsp;
+            &nbsp;&middot;&nbsp;
             <a href="{% url 'apagar' coleta.pk %}">Apagar</a>
           </td>
         </tr>
       {% endfor %}
       </tbody>
     </table>
+    </div>
   {% else %}
-    <p>Nenhuma coleta lançada ainda.</p>
+    <p class="lista-vazia" style="margin-top:16px;">Nenhuma coleta lançada ainda.</p>
   {% endif %}
 {% endblock %}

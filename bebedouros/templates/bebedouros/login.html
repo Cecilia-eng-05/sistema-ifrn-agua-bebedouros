@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar — Sistema de Monitoramento e Gestão da Água no IFRN – CNAT</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0; min-height: 100vh; color: #16323d;
+      background: linear-gradient(180deg, #dcecf3 0%, #eef4f7 40%, #eef4f7 100%);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .cartao {
+      width: 100%; max-width: 400px; background: #fff;
+      border: 1px solid #c2d9e2; border-radius: 16px; overflow: hidden;
+      box-shadow: 0 12px 40px -18px rgba(10, 77, 107, 0.45);
+    }
+    .cartao-onda { display: block; width: 100%; height: 60px; background: #0a4d6b; }
+    .cartao-corpo { padding: 26px 28px 30px; }
+    .marca { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #1580a9; font-weight: 600; }
+    h1 { font-size: 19px; line-height: 1.35; font-weight: 650; letter-spacing: -0.01em; margin: 6px 0 4px; }
+    .sub { margin: 0 0 22px; color: #566e79; font-size: 13.5px; }
+    form { display: grid; gap: 14px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #2e4a54; }
+    input {
+      width: 100%; font: inherit; padding: 10px 12px;
+      border: 1px solid #c2d9e2; border-radius: 8px; background: #fff; color: #16323d;
+    }
+    input:focus-visible { outline: 3px solid #1580a9; outline-offset: 2px; }
+    button {
+      margin-top: 4px; font: inherit; font-weight: 600; font-size: 14px;
+      padding: 11px 16px; border: 0; border-radius: 9px;
+      background: #0a4d6b; color: #fff; cursor: pointer;
+    }
+    button:hover { background: #0c5f83; }
+    .erro {
+      background: #f7dede; border: 1px solid #e0b4b4; color: #7a2b2b;
+      padding: 10px 12px; border-radius: 8px; font-size: 13.5px; margin-bottom: 4px;
+    }
+    .rodape { margin-top: 20px; font-size: 12.5px; color: #7c929c; text-align: center; }
+  </style>
+</head>
+<body>
+  <main class="cartao">
+    <svg class="cartao-onda" viewBox="0 0 400 60" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 34 C 70 14, 130 14, 200 30 S 330 50, 400 28 L400 60 L0 60 Z" fill="#0c5f83"/>
+      <path d="M0 42 C 70 26, 130 26, 200 38 S 330 56, 400 40 L400 60 L0 60 Z" fill="#ffffff"/>
+    </svg>
+    <div class="cartao-corpo">
+      <div class="marca">IFRN &ndash; Campus Natal Central</div>
+      <h1>Sistema de Monitoramento e Gestão da Água no IFRN &ndash; CNAT</h1>
+      <p class="sub">Acesso da equipe do núcleo.</p>
+
+      {% if form.non_field_errors %}
+        <div class="erro">Usuário ou senha incorretos. Tente de novo.</div>
+      {% endif %}
+
+      <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <div>
+          <label for="id_username">Usuário</label>
+          <input type="text" name="username" id="id_username" autocomplete="username" autofocus required>
+        </div>
+        <div>
+          <label for="id_password">Senha</label>
+          <input type="password" name="password" id="id_password" autocomplete="current-password" required>
+        </div>
+        <input type="hidden" name="next" value="{{ next }}">
+        <button type="submit">Entrar</button>
+      </form>
+
+      <p class="rodape">Uma conta única, compartilhada pela equipe do projeto.</p>
+    </div>
+  </main>
+</body>
+</html>

@@ -3,20 +3,20 @@
   <h1>Coleta de {{ coleta.data|date:"d/m/Y" }}
     <span class="etiqueta {{ coleta.status }}">{{ coleta.get_status_display }}</span>
   </h1>
-  <p><a href="{% url 'coleta_list' %}">&larr; Voltar para a lista</a></p>
+  <a class="voltar" href="{% url 'coleta_list' %}">&larr; Voltar para a lista</a>
   <form method="post">
     {% csrf_token %}
-    <div style="overflow-x: auto;">
+    <div class="painel">
     <table>
       <thead>
         <tr>
           <th>Bebedouro</th>
-          <th>Cloro<br><small>mg/L Cl₂</small></th>
-          <th>Condutividade<br><small>µS/cm</small></th>
-          <th>Nitrato<br><small>mg/L N</small></th>
-          <th>Turbidez<br><small>UNT</small></th>
+          <th>Cloro Residual Livre <span class="unid">(mg/L Cl₂)</span></th>
+          <th>Condutividade Elétrica <span class="unid">(µS/cm)</span></th>
+          <th>Nitrato <span class="unid">(mg/L N)</span></th>
+          <th>Turbidez <span class="unid">(UNT)</span></th>
           <th>pH</th>
-          <th>Coliformes totais</th>
+          <th>Coliformes Totais</th>
           <th>E. coli</th>
           <th>Filtro</th>
           <th>Fora de operação nesta data</th>
@@ -27,12 +27,12 @@
       {% for linha in linhas %}
         {% if linha.bloqueada %}
           <tr class="bloqueada">
-            <td>{{ linha.bebedouro.codigo }}</td>
+            <td class="cod">{{ linha.bebedouro.codigo }}</td>
             <td colspan="10">Fora de operação (bebedouro desativado)</td>
           </tr>
         {% else %}
           <tr>
-            <td>{{ linha.bebedouro.codigo }}</td>
+            <td class="cod">{{ linha.bebedouro.codigo }}</td>
             <td>{{ linha.form.cloro }}</td>
             <td>{{ linha.form.condutividade }}</td>
             <td>{{ linha.form.nitrato }}</td>
@@ -49,9 +49,9 @@
       </tbody>
     </table>
     </div>
-    <p>
-      <button type="submit" name="acao" value="salvar">Salvar rascunho</button>
-      <button type="submit" name="acao" value="publicar" formaction="{% url 'publicar' coleta.pk %}">Publicar</button>
-    </p>
+    <div class="acoes">
+      <button type="submit" class="btn secundario" name="acao" value="salvar">Salvar rascunho</button>
+      <button type="submit" class="btn" name="acao" value="publicar" formaction="{% url 'publicar' coleta.pk %}">Publicar</button>
+    </div>
   </form>
 {% endblock %}

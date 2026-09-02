@@ -131,8 +131,9 @@ STORAGES = {
     },
 }
 
-LOGIN_URL = '/admin/login/'
+LOGIN_URL = '/entrar/'
 LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/entrar/'
 
 # Endurecimento aplicado só em produção (quando DEBUG=0).
 if not DEBUG:

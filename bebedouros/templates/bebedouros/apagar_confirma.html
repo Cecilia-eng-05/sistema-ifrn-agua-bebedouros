@@ -4,7 +4,9 @@
   <p>Isso remove os resultados de todos os bebedouros dessa data. Não dá para desfazer.</p>
   <form method="post">
     {% csrf_token %}
-    <button type="submit">Apagar</button>
-    <a href="{% url 'coleta_list' %}">Cancelar</a>
+    <div class="acoes">
+      <button type="submit" class="btn perigo">Apagar</button>
+      <a class="btn secundario" href="{% url 'coleta_list' %}">Cancelar</a>
+    </div>
   </form>
 {% endblock %}

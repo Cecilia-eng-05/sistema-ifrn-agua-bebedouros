@@ -5,27 +5,119 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}Monitoramento da Água — IFRN-CNAT{% endblock %}</title>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 0; color: #1b1b1b; }
-    header { background: #005a9c; color: #fff; padding: 12px 20px; }
-    header a { color: #fff; margin-right: 16px; text-decoration: none; }
-    main { padding: 20px; max-width: 1100px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
-    .msg { padding: 8px 12px; margin: 6px 0; border-radius: 4px; }
-    .msg.warning { background: #fff3cd; }
-    .msg.error { background: #f8d7da; }
-    .msg.success { background: #d1e7dd; }
-    .etiqueta { padding: 2px 8px; border-radius: 10px; font-size: 12px; }
-    .etiqueta.rascunho { background: #e2e3e5; }
-    .etiqueta.publicado { background: #d1e7dd; }
-    .bloqueada { background: #f2f2f2; color: #888; }
+    :root {
+      --fundo: #eef4f7;
+      --superficie: #ffffff;
+      --profunda: #0a4d6b;
+      --profunda-2: #0c5f83;
+      --media: #1580a9;
+      --clara: #dbeef4;
+      --tinta: #16323d;
+      --tinta-suave: #566e79;
+      --borda: #c2d9e2;
+      --rascunho-bg: #e6ebee; --rascunho-tt: #47575f;
+      --publicado-bg: #cdece0; --publicado-tt: #1c6b4e;
+      --aviso-bg: #fbf1d3; --aviso-bd: #e6cf8f;
+      --erro-bg: #f7dede; --erro-bd: #e0b4b4;
+      --ok-bg: #d6ede2; --ok-bd: #a9d6c0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0; color: var(--tinta); background: var(--fundo);
+      line-height: 1.5;
+    }
+    a { color: var(--media); }
+    *:focus-visible { outline: 3px solid var(--media); outline-offset: 2px; border-radius: 2px; }
+
+    .topo { background: var(--profunda); color: #fff; }
+    .topo-inner {
+      max-width: 1100px; margin: 0 auto; padding: 14px 20px;
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px;
+    }
+    .topo-nome {
+      font-size: 15px; font-weight: 650; letter-spacing: -0.01em;
+      margin-right: auto;
+    }
+    .topo nav { display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: baseline; }
+    .topo nav a, .topo .sair-btn {
+      color: #cfe6ef; text-decoration: none; font-size: 14px;
+      background: none; border: 0; padding: 0; cursor: pointer;
+      font-family: inherit;
+    }
+    .topo nav a:hover, .topo .sair-btn:hover { color: #fff; text-decoration: underline; }
+    .onda { display: block; width: 100%; height: 34px; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 26px 20px 60px; }
+    h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 6px; }
+    .voltar { display: inline-block; margin: 0 0 18px; font-size: 14px; }
+
+    .msg { padding: 10px 14px; margin: 8px 0; border-radius: 8px; border: 1px solid transparent; font-size: 14px; }
+    .msg.warning { background: var(--aviso-bg); border-color: var(--aviso-bd); }
+    .msg.error { background: var(--erro-bg); border-color: var(--erro-bd); }
+    .msg.success { background: var(--ok-bg); border-color: var(--ok-bd); }
+
+    .painel {
+      background: var(--superficie); border: 1px solid var(--borda);
+      border-radius: 12px; padding: 4px; overflow-x: auto;
+    }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--borda); vertical-align: middle; }
+    thead th {
+      background: var(--clara); color: var(--profunda);
+      font-weight: 600; border-bottom: 2px solid var(--borda);
+      position: sticky; top: 0;
+    }
+    thead th .unid { display: block; font-weight: 400; font-size: 12px; color: var(--tinta-suave); }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover td { background: #f4f9fb; }
+    td.cod { font-weight: 600; color: var(--profunda); white-space: nowrap; }
+    tr.bloqueada td { background: #f3f5f6; color: #8a9aa1; }
+
+    input[type="text"], input[type="number"], input[type="date"], select, input:not([type]) {
+      font: inherit; padding: 6px 8px; border: 1px solid var(--borda);
+      border-radius: 6px; background: #fff; color: var(--tinta); max-width: 100%;
+    }
+    table input:not([type="checkbox"]), table select { width: 100%; min-width: 92px; }
+
+    .acoes { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .btn {
+      font: inherit; font-size: 14px; font-weight: 550;
+      padding: 9px 16px; border-radius: 8px; cursor: pointer;
+      border: 1px solid var(--profunda); background: var(--profunda); color: #fff;
+      text-decoration: none; display: inline-block;
+    }
+    .btn:hover { background: var(--profunda-2); }
+    .btn.secundario { background: #fff; color: var(--profunda); }
+    .btn.secundario:hover { background: var(--clara); }
+    .btn.perigo { border-color: #a83232; background: #a83232; }
+    .btn.perigo:hover { background: #8f2a2a; }
+
+    .etiqueta { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .etiqueta.rascunho { background: var(--rascunho-bg); color: var(--rascunho-tt); }
+    .etiqueta.publicado { background: var(--publicado-bg); color: var(--publicado-tt); }
+
+    .lista-vazia { color: var(--tinta-suave); }
+    @media (max-width: 620px) { main { padding: 18px 14px 48px; } h1 { font-size: 20px; } }
   </style>
 </head>
 <body>
-  <header>
-    <a href="{% url 'coleta_list' %}">Coletas</a>
-    <a href="/admin/bebedouros/bebedouro/">Cadastro de bebedouros</a>
-    <a href="/admin/logout/">Sair</a>
+  <header class="topo">
+    <div class="topo-inner">
+      <span class="topo-nome">Sistema de Monitoramento e Gestão da Água no IFRN&nbsp;&ndash;&nbsp;CNAT</span>
+      <nav>
+        <a href="{% url 'coleta_list' %}">Coletas</a>
+        <a href="/admin/bebedouros/bebedouro/">Bebedouros</a>
+        <form action="{% url 'logout' %}" method="post" style="display:inline">
+          {% csrf_token %}
+          <button type="submit" class="sair-btn">Sair</button>
+        </form>
+      </nav>
+    </div>
+    <svg class="onda" viewBox="0 0 1440 34" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 20 C 240 2, 480 2, 720 18 S 1200 34, 1440 16 L1440 34 L0 34 Z" fill="#0c5f83"/>
+      <path d="M0 26 C 240 12, 480 12, 720 24 S 1200 38, 1440 24 L1440 34 L0 34 Z" fill="#eef4f7"/>
+    </svg>
   </header>
   <main>
     {% for message in messages %}
