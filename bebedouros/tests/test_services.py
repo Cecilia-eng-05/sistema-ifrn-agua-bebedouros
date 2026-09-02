@@ -11,7 +11,9 @@ class LinhasFaltantesTests(TestCase):
         self.coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1))
         self.b1 = Bebedouro.objects.create(numero=1)
         self.b2 = Bebedouro.objects.create(numero=2)
-        self.b3 = Bebedouro.objects.create(numero=3, ativo=False)
+        self.b3 = Bebedouro.objects.create(
+            numero=3, desativado_em=datetime.date(2026, 1, 1)
+        )
 
     def test_missing_when_no_result_or_empty_result(self):
         Resultado.objects.create(coleta=self.coleta, bebedouro=self.b1, ph="7.2")

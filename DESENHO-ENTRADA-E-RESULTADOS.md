@@ -101,11 +101,12 @@ Uma lista com os bebedouros. Nela é possível:
 
 - **criar** um bebedouro (código e local);
 - **editar** o local;
-- **ativar / desativar**.
+- **desativar a partir de uma data** / **reativar**.
 
-**Desativar não apaga nada.** As coletas antigas continuam com os
-resultados que já tinham. O bebedouro apenas deixa de ser cobrado nas
-coletas novas, até ser reativado.
+**Desativar não apaga nada e não mexe no passado.** As coletas anteriores
+à data de desativação continuam com os resultados que tinham. O bebedouro
+só deixa de ser cobrado nas coletas **daquela data em diante**, até ser
+reativado. Detalhes na seção 7 (caso B).
 
 ---
 
@@ -117,9 +118,10 @@ coletas novas, até ser reativado.
 - Abre a **grade**:
   - uma **linha por bebedouro**;
   - **colunas** = os 7 parâmetros + a situação do filtro (seção 3.3);
-  - bebedouros **ativos**: linha preenchível;
-  - bebedouros **desativados**: linha **travada**, marcada como
-    "fora de operação";
+  - bebedouros em operação na data da coleta: linha preenchível;
+  - bebedouros **desativados até a data da coleta**: linha **travada**,
+    marcada como "fora de operação" (coletas anteriores à desativação
+    seguem preenchíveis — ver seção 7, caso B);
   - cada linha ativa tem também um marcador **"fora de operação nesta
     data"** (com espaço para uma observação curta) para o caso de o
     bebedouro estar quebrado / em manutenção só naquele dia — ver seção 7.
@@ -174,11 +176,18 @@ hora da coleta):
 
 **B. Vai ficar fora por tempo indeterminado** (removido, desligado sem
 previsão):
-- usa-se o botão **desativar** no cadastro;
-- esse estado **permanece** — vale para todas as coletas seguintes — até
-  alguém **reativar**;
-- não é "para sempre" (dá para voltar atrás), mas também não é preso a uma
-  data só.
+- no cadastro, o bebedouro é **desativado a partir de uma data** (por
+  padrão, o dia de hoje);
+- dessa data **em diante**, ele aparece **travado** ("fora de operação")
+  nas coletas;
+- coletas **anteriores** a essa data **não são afetadas** — continuam
+  mostrando os resultados históricos que o bebedouro teve, e ainda dá para
+  corrigi-los;
+- **reativar** faz o bebedouro voltar a ser cobrado nas coletas. O período
+  em que ficou fora deixa de ser marcado como "desativado"; para aquelas
+  quinzenas, usa-se o marcador "fora de operação nesta data" (caso A). Não
+  há histórico de vários ciclos liga/desliga — desativar é para saída por
+  tempo indeterminado, que deve ser rara.
 
 ---
 
@@ -193,12 +202,13 @@ previsão):
    rascunho".
 4. A marca **rascunho / publicado** existe desde já; por enquanto serve
    para a equipe saber o que já foi conferido.
-5. Bebedouro desativado **aparece na grade travado** ("fora de operação"),
-   não some.
+5. Desativação de bebedouro tem **data**: trava a linha nas coletas
+   **daquela data em diante**; coletas anteriores ficam intactas e
+   preenchíveis. (Ajuste feito em 02/09/2026, após a construção.)
 6. Dá para **salvar rascunho com linhas em branco**; ao publicar, o
    sistema **avisa** o que falta mas **não bloqueia**.
 7. O **cadastro dos bebedouros** entra nesta etapa (criar, editar local,
-   ativar/desativar).
+   desativar a partir de uma data / reativar).
 8. Formato **"<valor"** só ocorre, até hoje, na **turbidez**.
 9. Conferência de valores estranhos: só o **básico e leve**, sem travar, e
    descartável se complicar.

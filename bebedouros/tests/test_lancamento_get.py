@@ -12,7 +12,9 @@ class LancamentoGetTests(TestCase):
         self.client.login(username="nucleo", password="segredo")
         self.coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1))
         self.ativo = Bebedouro.objects.create(numero=1, local="Mesas verdes")
-        self.inativo = Bebedouro.objects.create(numero=2, local="Piscinas", ativo=False)
+        self.inativo = Bebedouro.objects.create(
+            numero=2, local="Piscinas", desativado_em=datetime.date(2026, 1, 1)
+        )
 
     def test_grid_shows_editable_row_for_active_and_locked_for_inactive(self):
         response = self.client.get(f"/coletas/{self.coleta.pk}/lancamento/")

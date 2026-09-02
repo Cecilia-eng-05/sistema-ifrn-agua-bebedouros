@@ -66,7 +66,7 @@ def _linhas(coleta, dados_post=None):
     for bebedouro in Bebedouro.objects.all():
         resultado = resultados.get(bebedouro.id)
         prefix = f"b{bebedouro.id}"
-        if not bebedouro.ativo:
+        if not bebedouro.ativo_em(coleta.data):
             linhas.append(
                 {"bebedouro": bebedouro, "bloqueada": True, "resultado": resultado, "form": None}
             )

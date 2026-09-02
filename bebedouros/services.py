@@ -6,7 +6,9 @@ def linhas_faltantes(coleta):
     vazio e sem o marcador 'fora de operação nesta data'. Ordenado por número."""
     resultados = {r.bebedouro_id: r for r in coleta.resultados.all()}
     faltantes = []
-    for bebedouro in Bebedouro.objects.filter(ativo=True):
+    for bebedouro in Bebedouro.objects.all():
+        if not bebedouro.ativo_em(coleta.data):
+            continue
         resultado = resultados.get(bebedouro.id)
         if resultado is None:
             faltantes.append(bebedouro.codigo)

@@ -4,7 +4,9 @@ from django.db import models
 class Bebedouro(models.Model):
     numero = models.PositiveSmallIntegerField(unique=True)
     local = models.CharField(max_length=200, blank=True)
-    ativo = models.BooleanField(default=True)
+    # Data em que o bebedouro saiu de operação por tempo indeterminado.
+    # Vazio = em operação. Coletas anteriores a essa data não são afetadas.
+    desativado_em = models.DateField("Desativado em", null=True, blank=True)
 
     class Meta:
         ordering = ["numero"]
@@ -12,6 +14,14 @@ class Bebedouro(models.Model):
     @property
     def codigo(self):
         return f"B{self.numero}"
+
+    @property
+    def ativo(self):
+        return self.desativado_em is None
+
+    def ativo_em(self, data):
+        """Estava em operação na data desta coleta?"""
+        return self.desativado_em is None or data < self.desativado_em
 
     def __str__(self):
         return self.codigo
