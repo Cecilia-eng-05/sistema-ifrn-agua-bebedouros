@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ColetaForm, ResultadoRowForm, parse_turbidez
 from .models import Bebedouro, Coleta, Resultado
-from .services import linhas_faltantes, publicar_coleta
+from .services import linhas_faltantes, publicar_coleta, recalcular_coleta
 from .validation import avisos_para_resultado
 
 
@@ -121,6 +121,7 @@ def lancamento(request, pk):
                     "observacao": cd.get("observacao") or "",
                 },
             )
+        recalcular_coleta(coleta)
         for aviso in avisos:
             messages.warning(request, aviso)
         if coleta.status == Coleta.RASCUNHO:

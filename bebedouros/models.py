@@ -78,6 +78,16 @@ class Resultado(models.Model):
     ecoli = models.CharField(max_length=10, choices=MICRO_CHOICES, blank=True, default="")
     filtro = models.CharField(max_length=10, choices=FILTRO_CHOICES, blank=True, default="")
 
+    # IQA-B calculado a partir dos campos acima. Preenchido pelo sistema ao
+    # salvar a coleta; a fórmula em si (bebedouros/iqab.py) ainda é pendente.
+    iqab = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    iqab_qfq = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    iqab_qm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    iqab_co = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    iqab_classificacao = models.CharField(max_length=12, blank=True, default="")
+    iqab_status = models.CharField(max_length=12, blank=True, default="")
+    metodologia_versao = models.CharField(max_length=20, blank=True, default="")
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -88,6 +98,29 @@ class Resultado(models.Model):
 
     def __str__(self):
         return f"{self.bebedouro.codigo} @ {self.coleta.data:%d/%m/%Y}"
+
+    def iqab_texto(self):
+        """Texto do IQA-B para mostrar na grade."""
+        from . import iqab as _iqab
+
+        if self.iqab_status == _iqab.CALCULADO and self.iqab is not None:
+            return f"{self.iqab} · {self.iqab_classificacao}"
+        if self.iqab_status == _iqab.PENDENTE:
+            return "pendente"
+        if self.iqab_status == _iqab.INCOMPLETO:
+            return "incompleto"
+        return "—"
+
+    def iqab_faixa_slug(self):
+        """Slug da faixa para colorir a célula ('' quando não há número)."""
+        mapa = {
+            "Excelente": "excelente",
+            "Boa": "boa",
+            "Regular": "regular",
+            "Ruim": "ruim",
+            "Crítica": "critica",
+        }
+        return mapa.get(self.iqab_classificacao, "")
 
     def esta_vazio(self):
         numericos = [self.cloro, self.condutividade, self.nitrato, self.turbidez_valor, self.ph]

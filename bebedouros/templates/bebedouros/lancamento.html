@@ -11,6 +11,7 @@
       <thead>
         <tr>
           <th>Bebedouro</th>
+          <th>IQA-B</th>
           <th>Cloro Residual Livre <span class="unid">(mg/L Cl₂)</span></th>
           <th>Condutividade Elétrica <span class="unid">(µS/cm)</span></th>
           <th>Nitrato <span class="unid">(mg/L N)</span></th>
@@ -28,11 +29,14 @@
         {% if linha.bloqueada %}
           <tr class="bloqueada">
             <td class="cod">{{ linha.bebedouro.codigo }}</td>
-            <td colspan="10">Fora de operação (bebedouro desativado)</td>
+            <td colspan="11">Fora de operação (bebedouro desativado)</td>
           </tr>
         {% else %}
           <tr>
             <td class="cod">{{ linha.bebedouro.codigo }}</td>
+            <td class="iqab{% if linha.resultado %} faixa-{{ linha.resultado.iqab_faixa_slug }}{% endif %}">
+              {% if linha.resultado %}{{ linha.resultado.iqab_texto }}{% else %}—{% endif %}
+            </td>
             <td>{{ linha.form.cloro }}</td>
             <td>{{ linha.form.condutividade }}</td>
             <td>{{ linha.form.nitrato }}</td>

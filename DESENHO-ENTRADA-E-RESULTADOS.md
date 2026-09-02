@@ -159,6 +159,35 @@ aceitável por ora, já que a medição está estável há anos.
 
 *Nesta etapa não existe "voltar de publicado para rascunho".*
 
+### 6.1 Cálculo do IQA-B — quando acontece
+
+**Decisão (02/09/2026):** o IQA-B é calculado **automaticamente toda vez que
+a coleta é salva**, e mostrado numa coluna da própria grade, bebedouro por
+bebedouro. Não há botão "calcular" separado (fácil de esquecer, e o número
+ficaria desatualizado depois de uma correção). O botão **Publicar** tem um
+papel só: tornar os resultados e os índices visíveis na parte pública — ele
+não gera nada.
+
+Assim você vê a classificação de cada bebedouro **enquanto ainda é
+rascunho**, que é o momento de perceber um problema antes de publicar.
+
+Estados que uma célula de IQA-B pode mostrar:
+
+- **"—"** — linha vazia ou "fora de operação nesta data": nada a calcular.
+- **"pendente"** — a linha tem dados, mas a **fórmula do IQA-B ainda não
+  foi definida** (decisão metodológica do TCC, seção 8.2 da definição).
+- **"incompleto"** — (quando a fórmula existir) dados insuficientes.
+- **número + classificação** com cor — (quando a fórmula existir) índice
+  calculado.
+
+Cada IQA-B guardado registra **qual versão da metodologia** o gerou, para o
+histórico não embaralhar quando a fórmula mudar.
+
+**O que está construído agora:** a coluna na grade, o recálculo automático
+ao salvar, os estados acima e a marca da versão. **O que falta:** a fórmula
+em si — hoje uma peça isolada (`bebedouros/iqab.py`) que devolve "pendente";
+quando o TCC definir a pontuação, só ela muda.
+
 ---
 
 ## 7. Estados de um bebedouro — resumo
