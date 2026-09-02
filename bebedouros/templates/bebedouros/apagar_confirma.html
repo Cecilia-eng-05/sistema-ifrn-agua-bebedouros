@@ -1,0 +1,10 @@
+{% extends "bebedouros/base.html" %}
+{% block conteudo %}
+  <h1>Apagar a coleta de {{ coleta.data|date:"d/m/Y" }}?</h1>
+  <p>Isso remove os resultados de todos os bebedouros dessa data. Não dá para desfazer.</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Apagar</button>
+    <a href="{% url 'coleta_list' %}">Cancelar</a>
+  </form>
+{% endblock %}

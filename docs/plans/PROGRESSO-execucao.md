@@ -14,7 +14,7 @@ Executado inline (sem subagentes) nesta sessão. TDD por tarefa.
 - [x] Task 6 — grade (GET) + forms + parse_turbidez
 - [x] Task 7 — grade (POST) salvar rascunho + avisos
 - [x] Task 8 — publicar + linhas_faltantes
-- [ ] Task 9 — editar coleta publicada
+- [x] Task 9 — editar coleta publicada
 - [ ] Task 10 — apagar coleta
 - [ ] Task 11 — config de produção portátil
 

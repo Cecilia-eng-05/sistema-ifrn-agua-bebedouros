@@ -1,6 +1,5 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ColetaForm, ResultadoRowForm, parse_turbidez
@@ -158,4 +157,9 @@ def publicar(request, pk):
 
 @login_required
 def apagar(request, pk):
-    return HttpResponse("stub")
+    coleta = get_object_or_404(Coleta, pk=pk)
+    if request.method == "POST":
+        coleta.delete()
+        messages.success(request, "Coleta apagada.")
+        return redirect("coleta_list")
+    return render(request, "bebedouros/apagar_confirma.html", {"coleta": coleta})
