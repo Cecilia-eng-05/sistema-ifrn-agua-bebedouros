@@ -4,8 +4,12 @@ Executado inline (sem subagentes) nesta sessão. TDD por tarefa.
 
 - [x] Task 1 — esqueleto Django, login gate, base template (commit baf737d)
 - [x] Task 2 — Bebedouro model + admin + seed (commit 190d4c8)
-- [ ] Task 3 — Coleta model + lista
-- [ ] Task 4 — criar coleta (data + aviso duplicada)
+- [x] Task 3 — Coleta model + lista (commit 2b17569)
+- [x] Task 4 — criar coleta (data + aviso duplicada) (commit pendente)
+  - Ruling: ColetaForm virou forms.Form simples (não ModelForm). Motivo: o ModelForm
+    validava a unicidade da data antes e nunca chegava na mensagem amigável de duplicada
+    que a própria tarefa pede. Custo se errado: baixo — só a forma de montar o formulário
+    de data muda; comportamento e testes iguais ao plano.
 - [ ] Task 5 — Resultado model + esta_vazio
 - [ ] Task 6 — grade (GET) + forms + parse_turbidez
 - [ ] Task 7 — grade (POST) salvar rascunho + avisos

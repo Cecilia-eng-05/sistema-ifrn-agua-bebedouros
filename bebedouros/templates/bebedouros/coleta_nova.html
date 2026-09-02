@@ -1,0 +1,13 @@
+{% extends "bebedouros/base.html" %}
+{% block conteudo %}
+  <h1>Nova coleta</h1>
+  <form method="post">
+    {% csrf_token %}
+    <p>Data da coleta: {{ form.data }}</p>
+    {{ form.data.errors }}
+    <button type="submit">Criar</button>
+  </form>
+  {% if existente %}
+    <p><a href="{% url 'lancamento' existente.pk %}">Abrir a coleta existente</a></p>
+  {% endif %}
+{% endblock %}
