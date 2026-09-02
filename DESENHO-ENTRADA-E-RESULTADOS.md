@@ -311,7 +311,22 @@ B11 DIATINF · B12 DIACON · B13 DIAC · B14 DIAREN 1 · B15 DIAREN 2.
 
 ---
 
-## 11. Próximo passo
+## 11. Situação e ordem dos próximos passos
 
-Transformar este desenho num **plano de construção** — a lista de tarefas
-na ordem — e então começar a construir.
+**Construído e testado (02/09/2026):** toda a parte interna descrita neste
+documento — cadastro, grade de lançamento, rascunho/publicado, ver /
+corrigir / apagar, desativação com data, identidade visual, e a estrutura
+do IQA-B (recálculo ao salvar, classificação, coluna na grade; falta só a
+fórmula). Roda no computador; ainda **não** foi para hospedagem.
+
+**Ordem decidida pela orientanda (02/09/2026) — hospedar só quando tudo
+estiver pronto, não agora:**
+
+1. Metodologia do IQA-B definida com a orientadora (decisão pendente).
+2. Construir a **fórmula do IQA-B** (`bebedouros/iqab.py`).
+3. **Importar todo o histórico** de análises a partir das planilhas.
+4. **Aí sim, hospedar** o sistema (escolher o serviço na hora).
+5. Já hospedado, seguir para a **parte pública** (mapa, abas, alertas).
+
+Enquanto isso, a orientanda testa localmente. Publicar continua sendo uma
+tarefa de ~30 min quando a hora chegar (ver `README-DEPLOY.md`).
