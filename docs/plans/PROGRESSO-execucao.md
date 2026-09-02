@@ -16,7 +16,7 @@ Executado inline (sem subagentes) nesta sessão. TDD por tarefa.
 - [x] Task 8 — publicar + linhas_faltantes
 - [x] Task 9 — editar coleta publicada
 - [x] Task 10 — apagar coleta
-- [ ] Task 11 — config de produção portátil
+- [x] Task 11 — config de produção portátil
 
 ## Notas
 - Python 3.14.7, Django 5.2.17, venv em `.venv/`.
