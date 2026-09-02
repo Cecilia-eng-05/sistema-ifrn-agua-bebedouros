@@ -12,7 +12,7 @@ Executado inline (sem subagentes) nesta sessão. TDD por tarefa.
     de data muda; comportamento e testes iguais ao plano.
 - [x] Task 5 — Resultado model + esta_vazio
 - [x] Task 6 — grade (GET) + forms + parse_turbidez
-- [ ] Task 7 — grade (POST) salvar rascunho + avisos
+- [x] Task 7 — grade (POST) salvar rascunho + avisos
 - [ ] Task 8 — publicar + linhas_faltantes
 - [ ] Task 9 — editar coleta publicada
 - [ ] Task 10 — apagar coleta

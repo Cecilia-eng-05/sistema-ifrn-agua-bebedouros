@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ColetaForm, ResultadoRowForm, parse_turbidez
 from .models import Bebedouro, Coleta, Resultado
+from .services import linhas_faltantes, publicar_coleta
 from .validation import avisos_para_resultado
 
 
@@ -137,7 +138,22 @@ def lancamento(request, pk):
 
 @login_required
 def publicar(request, pk):
-    return HttpResponse("stub")
+    coleta = get_object_or_404(Coleta, pk=pk)
+    if request.method != "POST":
+        return redirect("lancamento", pk=pk)
+    faltantes = linhas_faltantes(coleta)
+    if faltantes and request.POST.get("confirmar") != "1":
+        messages.warning(
+            request, "Faltam resultados de: " + ", ".join(faltantes) + "."
+        )
+        return render(
+            request,
+            "bebedouros/publicar_confirma.html",
+            {"coleta": coleta, "faltantes": faltantes},
+        )
+    publicar_coleta(coleta)
+    messages.success(request, f"{coleta} publicada.")
+    return redirect("coleta_list")
 
 
 @login_required

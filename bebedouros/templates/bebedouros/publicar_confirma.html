@@ -1,0 +1,14 @@
+{% extends "bebedouros/base.html" %}
+{% block conteudo %}
+  <h1>Publicar coleta de {{ coleta.data|date:"d/m/Y" }}?</h1>
+  <p>Faltam resultados destes bebedouros:</p>
+  <ul>
+    {% for codigo in faltantes %}<li>{{ codigo }}</li>{% endfor %}
+  </ul>
+  <form method="post" action="{% url 'publicar' coleta.pk %}">
+    {% csrf_token %}
+    <input type="hidden" name="confirmar" value="1">
+    <button type="submit">Publicar mesmo assim</button>
+    <a href="{% url 'lancamento' coleta.pk %}">Voltar</a>
+  </form>
+{% endblock %}
