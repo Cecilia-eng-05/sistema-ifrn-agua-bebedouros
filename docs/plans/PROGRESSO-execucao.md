@@ -11,7 +11,7 @@ Executado inline (sem subagentes) nesta sessão. TDD por tarefa.
     que a própria tarefa pede. Custo se errado: baixo — só a forma de montar o formulário
     de data muda; comportamento e testes iguais ao plano.
 - [x] Task 5 — Resultado model + esta_vazio
-- [ ] Task 6 — grade (GET) + forms + parse_turbidez
+- [x] Task 6 — grade (GET) + forms + parse_turbidez
 - [ ] Task 7 — grade (POST) salvar rascunho + avisos
 - [ ] Task 8 — publicar + linhas_faltantes
 - [ ] Task 9 — editar coleta publicada

@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ColetaForm, ResultadoRowForm, parse_turbidez
 from .models import Bebedouro, Coleta, Resultado
+from .validation import avisos_para_resultado
 
 
 @login_required
@@ -83,6 +84,50 @@ def _linhas(coleta, dados_post=None):
 @login_required
 def lancamento(request, pk):
     coleta = get_object_or_404(Coleta, pk=pk)
+    if request.method == "POST":
+        linhas = _linhas(coleta, request.POST)
+        avisos = []
+        for linha in linhas:
+            if linha["bloqueada"]:
+                continue
+            bebedouro = linha["bebedouro"]
+            form = linha["form"]
+            form.is_valid()
+            cd = form.cleaned_data
+            try:
+                turbidez_valor, turbidez_abaixo = parse_turbidez(cd.get("turbidez", ""))
+            except ValueError as exc:
+                turbidez_valor, turbidez_abaixo = None, False
+                avisos.append(f"{bebedouro.codigo}: {exc}")
+            numericos = {
+                "cloro": cd.get("cloro"),
+                "condutividade": cd.get("condutividade"),
+                "nitrato": cd.get("nitrato"),
+                "turbidez_valor": turbidez_valor,
+                "ph": cd.get("ph"),
+            }
+            for msg in avisos_para_resultado(numericos):
+                avisos.append(f"{bebedouro.codigo}: {msg}")
+            Resultado.objects.update_or_create(
+                coleta=coleta,
+                bebedouro=bebedouro,
+                defaults={
+                    **numericos,
+                    "turbidez_abaixo_limite": turbidez_abaixo,
+                    "coliformes_totais": cd.get("coliformes_totais") or "",
+                    "ecoli": cd.get("ecoli") or "",
+                    "filtro": cd.get("filtro") or "",
+                    "fora_de_operacao": cd.get("fora_de_operacao") or False,
+                    "observacao": cd.get("observacao") or "",
+                },
+            )
+        for aviso in avisos:
+            messages.warning(request, aviso)
+        if coleta.status == Coleta.RASCUNHO:
+            messages.success(request, "Resultados salvos como rascunho.")
+        else:
+            messages.success(request, "Resultados atualizados.")
+        return redirect("lancamento", pk=coleta.pk)
     return render(
         request,
         "bebedouros/lancamento.html",
