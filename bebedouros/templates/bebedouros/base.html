@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Monitoramento da Água — IFRN-CNAT{% endblock %}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; color: #1b1b1b; }
+    header { background: #005a9c; color: #fff; padding: 12px 20px; }
+    header a { color: #fff; margin-right: 16px; text-decoration: none; }
+    main { padding: 20px; max-width: 1100px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+    .msg { padding: 8px 12px; margin: 6px 0; border-radius: 4px; }
+    .msg.warning { background: #fff3cd; }
+    .msg.error { background: #f8d7da; }
+    .msg.success { background: #d1e7dd; }
+    .etiqueta { padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+    .etiqueta.rascunho { background: #e2e3e5; }
+    .etiqueta.publicado { background: #d1e7dd; }
+    .bloqueada { background: #f2f2f2; color: #888; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="{% url 'coleta_list' %}">Coletas</a>
+    <a href="/admin/bebedouros/bebedouro/">Cadastro de bebedouros</a>
+    <a href="/admin/logout/">Sair</a>
+  </header>
+  <main>
+    {% for message in messages %}
+      <div class="msg {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+    {% block conteudo %}{% endblock %}
+  </main>
+</body>
+</html>
