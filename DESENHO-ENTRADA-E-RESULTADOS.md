@@ -218,6 +218,13 @@ previsão):
   há histórico de vários ciclos liga/desliga — desativar é para saída por
   tempo indeterminado, que deve ser rara.
 
+**Para a parte pública (etapa futura):** os dois estados já ficam
+guardados (o marcador por linha, com a observação curta, e a data de
+desativação). Quando a parte pública for construída, a direção acordada é
+mostrar isso como transparência — "não monitorado nesta data / fora de
+operação" no lugar de um IQA-B, em vez de simplesmente sumir. O texto
+exato fica para aquela etapa.
+
 ---
 
 ## 8. Decisões tomadas nesta conversa
