@@ -217,9 +217,11 @@ IQA-B = 0,3 × QFQ + 0,5 × QM + 0,2 × CO
   o caso do histórico, que não tem filtro registrado, sem precisar de uma
   variante de metodologia separada.
 - **Arredondamento:** o IQA-B final (e as notas QFQ/QM/CO) são sempre
-  **número inteiro** — como as faixas de classificação são valores
-  fechados (80, 60, 40, 20), não faz sentido mostrar casas decimais.
-  Arredonda-se uma vez só, no final da conta.
+  **número inteiro**, cortado **para baixo** — nunca para cima. Uma faixa
+  só é considerada alcançada quando a conta realmente chega lá: 79,8 fica
+  em 79 (Boa), nunca "sobe" pra 80 (Excelente) por arredondamento. Assim
+  Boa cobre de fato 60 a 79,99, Excelente é só 80 pra cima de verdade, e
+  assim por diante. Corta-se uma vez só, no final da conta.
 
 **Vírgula em todo lugar (04/09/2026):** alguns números na grade estavam
 aparecendo com **ponto** (o IQA-B, e a turbidez quando reaparecia numa

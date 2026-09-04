@@ -19,7 +19,7 @@ módulo — o resto do sistema (armazenamento, recálculo ao salvar, exibição
 na grade) já está pronto.
 """
 
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_FLOOR, Decimal
 
 VERSAO_METODOLOGIA = "1.0"
 
@@ -66,11 +66,12 @@ INTEIRO = Decimal("1")
 
 
 def _arredondar(valor):
-    """Arredonda para número inteiro. As faixas de classificação (80, 60,
-    40, 20) são valores fechados, então o IQA-B (e as notas QFQ/QM/CO que o
-    compõem) são sempre mostrados como número inteiro, não com casas
-    decimais."""
-    return valor.quantize(INTEIRO, rounding=ROUND_HALF_UP)
+    """Corta para o inteiro abaixo — nunca arredonda pra cima.
+
+    Uma faixa só é alcançada quando a conta realmente chegou lá: 79,8 vira
+    79 (Boa), não 80 (Excelente). Assim Boa cobre de fato 60 a 79,99, sem um
+    valor beirando a faixa de cima "subir" pra ela só por arredondamento."""
+    return valor.quantize(INTEIRO, rounding=ROUND_FLOOR)
 
 
 def classificar(nota):

@@ -94,14 +94,16 @@ class CalcularTests(TestCase):
         d = iqab.calcular(r)
         # nota_cloro=0 => QFQ = 0,25*100 + 0,20*100 + 0,20*100 = 65
         self.assertEqual(d["qfq"], Decimal("65"))
-        # IQA-B = 0,3*65 + 0,5*100 + 0,2*100 = 89,5 -> arredonda p/ 90
-        self.assertEqual(d["iqab"], Decimal("90"))
+        # IQA-B = 0,3*65 + 0,5*100 + 0,2*100 = 89,5 -> corta pra 89 (não 90:
+        # só conta Excelente se a conta realmente chegar a 80+, não por
+        # arredondamento pra cima).
+        self.assertEqual(d["iqab"], Decimal("89"))
 
     def test_turbidez_faixa_intermediaria_pontua_50(self):
         r = self._criar(turbidez_valor=Decimal("3"))  # 1,01 a 5 NTU
         d = iqab.calcular(r)
-        # QFQ = 0,35*100 + 0,25*50 + 0,20*100 + 0,20*100 = 87,5 -> arredonda p/ 88
-        self.assertEqual(d["qfq"], Decimal("88"))
+        # QFQ = 0,35*100 + 0,25*50 + 0,20*100 + 0,20*100 = 87,5 -> corta p/ 87
+        self.assertEqual(d["qfq"], Decimal("87"))
         # IQA-B (calculado com o QFQ cheio, sem arredondar antes) = 96,25 -> 96
         self.assertEqual(d["iqab"], Decimal("96"))
 
@@ -109,7 +111,24 @@ class CalcularTests(TestCase):
         r = self._criar(turbidez_valor=Decimal("6"))
         d = iqab.calcular(r)
         self.assertEqual(d["qfq"], Decimal("75"))
-        self.assertEqual(d["iqab"], Decimal("93"))  # 92,5 -> arredonda p/ cima
+        # 92,5 -> corta pra 92, nunca arredonda pra cima
+        self.assertEqual(d["iqab"], Decimal("92"))
+
+    def test_arredondamento_nunca_sobe_de_faixa(self):
+        """79,75 tem que ficar em 79 (Boa) — nunca 80 (Excelente). Uma faixa
+        só é alcançada quando a conta realmente chega lá, não por
+        arredondamento."""
+        r = self._criar(
+            cloro=Decimal("0.1"),          # fora da faixa (nota 0)
+            turbidez_valor=Decimal("3"),   # faixa intermediária (nota 50)
+            ph=Decimal("7"),               # dentro da faixa (nota 100)
+            nitrato=Decimal("12"),         # acima do limite (nota 0)
+        )
+        d = iqab.calcular(r)
+        # QFQ = 0,35*0 + 0,25*50 + 0,20*100 + 0,20*0 = 32,5
+        # IQA-B = 0,3*32,5 + 0,5*100 + 0,2*100 = 79,75 -> corta pra 79
+        self.assertEqual(d["iqab"], Decimal("79"))
+        self.assertEqual(d["classificacao"], "Boa")
 
     def test_turbidez_abaixo_do_limite_de_deteccao_conta_como_otima(self):
         r = self._criar(turbidez_valor=None, turbidez_abaixo_limite=True)
