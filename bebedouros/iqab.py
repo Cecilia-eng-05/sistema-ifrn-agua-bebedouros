@@ -62,11 +62,15 @@ PESO_NITRATO = Decimal("0.20")
 PESO_ECOLI = Decimal("0.70")
 PESO_COLIFORMES = Decimal("0.30")
 
-UMA_CASA = Decimal("0.1")
+INTEIRO = Decimal("1")
 
 
 def _arredondar(valor):
-    return valor.quantize(UMA_CASA, rounding=ROUND_HALF_UP)
+    """Arredonda para número inteiro. As faixas de classificação (80, 60,
+    40, 20) são valores fechados, então o IQA-B (e as notas QFQ/QM/CO que o
+    compõem) são sempre mostrados como número inteiro, não com casas
+    decimais."""
+    return valor.quantize(INTEIRO, rounding=ROUND_HALF_UP)
 
 
 def classificar(nota):

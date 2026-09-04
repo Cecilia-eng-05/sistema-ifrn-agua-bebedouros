@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.formats import number_format
 
 from .forms import ColetaForm, ResultadoRowForm, parse_turbidez
 from .models import Bebedouro, Coleta, Resultado
@@ -41,11 +42,13 @@ def _initial_de(resultado):
     if resultado is None:
         return {}
     if resultado.turbidez_abaixo_limite and resultado.turbidez_valor is not None:
-        turbidez = f"<{resultado.turbidez_valor}"
+        turbidez = f"<{number_format(resultado.turbidez_valor)}"
     elif resultado.turbidez_abaixo_limite:
         turbidez = "<"
+    elif resultado.turbidez_valor is not None:
+        turbidez = number_format(resultado.turbidez_valor)
     else:
-        turbidez = resultado.turbidez_valor
+        turbidez = None
     return {
         "cloro": resultado.cloro,
         "condutividade": resultado.condutividade,

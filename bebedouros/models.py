@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.formats import number_format
 
 
 class Bebedouro(models.Model):
@@ -80,10 +81,10 @@ class Resultado(models.Model):
 
     # IQA-B calculado a partir dos campos acima pela fórmula em
     # bebedouros/iqab.py. Preenchido pelo sistema ao salvar a coleta.
-    iqab = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
-    iqab_qfq = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
-    iqab_qm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
-    iqab_co = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    iqab = models.DecimalField(max_digits=5, decimal_places=0, null=True, blank=True)
+    iqab_qfq = models.DecimalField(max_digits=5, decimal_places=0, null=True, blank=True)
+    iqab_qm = models.DecimalField(max_digits=5, decimal_places=0, null=True, blank=True)
+    iqab_co = models.DecimalField(max_digits=5, decimal_places=0, null=True, blank=True)
     iqab_classificacao = models.CharField(max_length=12, blank=True, default="")
     iqab_status = models.CharField(max_length=12, blank=True, default="")
     metodologia_versao = models.CharField(max_length=20, blank=True, default="")
@@ -104,7 +105,7 @@ class Resultado(models.Model):
         from . import iqab as _iqab
 
         if self.iqab_status == _iqab.CALCULADO and self.iqab is not None:
-            return f"{self.iqab} · {self.iqab_classificacao}"
+            return f"{number_format(self.iqab)} · {self.iqab_classificacao}"
         if self.iqab_status == _iqab.PENDENTE:
             return "pendente"
         if self.iqab_status == _iqab.INCOMPLETO:

@@ -185,19 +185,48 @@ rascunho**, que é o momento de perceber um problema antes de publicar.
 Estados que uma célula de IQA-B pode mostrar:
 
 - **"—"** — linha vazia ou "fora de operação nesta data": nada a calcular.
-- **"pendente"** — a linha tem dados, mas a **fórmula do IQA-B ainda não
-  foi definida** (decisão metodológica do TCC, seção 8.2 da definição).
-- **"incompleto"** — (quando a fórmula existir) dados insuficientes.
-- **número + classificação** com cor — (quando a fórmula existir) índice
-  calculado.
+- **"pendente"** — (fica reservado para coletas calculadas antes de existir
+  fórmula, se algum dia isso ocorrer de novo) linha com dados mas sem
+  fórmula.
+- **"incompleto"** — falta algum parâmetro obrigatório da fórmula naquela
+  linha (é o caso do histórico 2024/2025, que nunca teve a situação do
+  filtro registrada).
+- **número + classificação** com cor — índice calculado.
 
 Cada IQA-B guardado registra **qual versão da metodologia** o gerou, para o
 histórico não embaralhar quando a fórmula mudar.
 
-**O que está construído agora:** a coluna na grade, o recálculo automático
-ao salvar, os estados acima e a marca da versão. **O que falta:** a fórmula
-em si — hoje uma peça isolada (`bebedouros/iqab.py`) que devolve "pendente";
-quando o TCC definir a pontuação, só ela muda.
+**Fórmula definida e implementada em 04/09/2026 (versão "1.0"), com a
+orientadora:**
+
+```
+IQA-B = 0,3 × QFQ + 0,5 × QM + 0,2 × CO
+```
+
+- **QFQ** (físico-química): média ponderada — Cloro 0,35, Turbidez 0,25,
+  pH 0,20, Nitrato 0,20 — cada parâmetro pontuado 0 ou 100 (turbidez também
+  admite 50, faixa intermediária) pelos limites da Portaria MS nº 888/2021.
+  **Condutividade é só monitorada, não entra na conta.**
+- **QM** (microbiológica): **E. coli PRESENTE zera o QM inteiro** (não
+  entra em média — contaminação fecal não se dilui). Caso contrário,
+  0,70 × nota de E. coli + 0,30 × nota de Coliformes Totais.
+- **CO** (operacional): só o filtro — dentro da validade = 100, vencido = 0.
+- **Linha "incompleta":** decidida **por linha**, conforme os dados que
+  realmente estão presentes (não por uma regra fixa de ano) — isso resolve
+  o caso do histórico, que não tem filtro registrado, sem precisar de uma
+  variante de metodologia separada.
+- **Arredondamento:** o IQA-B final (e as notas QFQ/QM/CO) são sempre
+  **número inteiro** — como as faixas de classificação são valores
+  fechados (80, 60, 40, 20), não faz sentido mostrar casas decimais.
+  Arredonda-se uma vez só, no final da conta.
+
+**Vírgula em todo lugar (04/09/2026):** alguns números na grade estavam
+aparecendo com **ponto** (o IQA-B, e a turbidez quando reaparecia numa
+coleta já salva) enquanto os outros campos mostravam **vírgula** — o
+padrão brasileiro. Isso **não afetava nenhuma conta**: por trás dos panos
+o sistema sempre guarda e calcula com o valor certo, ponto ali era só a
+forma de exibir na tela. Ainda assim, corrigido para vírgula em todo
+lugar, por clareza.
 
 ---
 
