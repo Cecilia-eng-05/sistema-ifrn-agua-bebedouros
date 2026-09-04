@@ -149,10 +149,21 @@ aceitável por ora, já que a medição está estável há anos.
   grade, com os valores já lançados.
 - **Corrigir** um valor: edita direto e salva; o valor antigo não é
   guardado. Vale inclusive para coletas já publicadas.
-- **Publicar:** botão dentro da coleta. Se faltarem bebedouros que
-  deveriam ter resultado (ativos e sem o marcador "fora de operação nesta
-  data"), o sistema mostra quais ("faltam B3 e B9 — publicar mesmo
-  assim?") e pede confirmação. **Não bloqueia.**
+- **Publicar:** botão dentro da coleta. **Salva a grade primeiro** (o que
+  estiver na tela naquele momento), do mesmo jeito que "Salvar rascunho" —
+  assim uma edição feita e mandada direto pelo botão Publicar nunca é
+  perdida em silêncio. Só depois de salvar é que checa: se faltarem
+  bebedouros que deveriam ter resultado (ativos e sem o marcador "fora de
+  operação nesta data"), o sistema mostra quais ("faltam B3 e B9 —
+  publicar mesmo assim?") e pede confirmação. **Não bloqueia.**
+  - Esse aviso é **por bebedouro inteiro**: só considera "faltando" quem
+    ficou com **todos** os 7 campos em branco. Um bebedouro com só um
+    parâmetro faltando continua contando como resultado (parcial é
+    aceito, de propósito).
+  - Publicar **não é uma foto congelada**: uma correção salva depois —
+    mesmo sem apertar "Publicar" de novo — já é o que valeria para a
+    parte pública, porque é o mesmo dado, só com a marca de visível
+    ligada.
 - **Apagar uma coleta inteira:** possível tanto para rascunho quanto para
   coleta já publicada, com uma confirmação avisando que isso remove os
   resultados de todos os bebedouros daquela data.
