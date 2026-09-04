@@ -78,8 +78,8 @@ class Resultado(models.Model):
     ecoli = models.CharField(max_length=10, choices=MICRO_CHOICES, blank=True, default="")
     filtro = models.CharField(max_length=10, choices=FILTRO_CHOICES, blank=True, default="")
 
-    # IQA-B calculado a partir dos campos acima. Preenchido pelo sistema ao
-    # salvar a coleta; a fórmula em si (bebedouros/iqab.py) ainda é pendente.
+    # IQA-B calculado a partir dos campos acima pela fórmula em
+    # bebedouros/iqab.py. Preenchido pelo sistema ao salvar a coleta.
     iqab = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
     iqab_qfq = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
     iqab_qm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)

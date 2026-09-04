@@ -306,29 +306,28 @@ B11 DIATINF · B12 DIACON · B13 DIAC · B14 DIAREN 1 · B15 DIAREN 2.
 **Ainda pendente (não bloqueia esta etapa):**
 
 - Qual serviço gratuito de hospedagem/banco será usado na hora de publicar.
-- Tudo da seção 8.2 da definição (metodologia do IQA-B) — não afeta a
-  entrada e a guarda dos resultados brutos.
 
 ---
 
 ## 11. Situação e ordem dos próximos passos
 
-**Construído e testado (02/09/2026):** toda a parte interna descrita neste
+**Construído e testado (04/09/2026):** toda a parte interna descrita neste
 documento — cadastro, grade de lançamento, rascunho/publicado, ver /
-corrigir / apagar, desativação com data, identidade visual, e a estrutura
-do IQA-B (recálculo ao salvar, classificação, coluna na grade; falta só a
-fórmula). Roda no computador; ainda **não** foi para hospedagem.
+corrigir / apagar, desativação com data, identidade visual, e o IQA-B
+completo (fórmula definida com a orientadora, recálculo ao salvar,
+classificação, coluna na grade). Roda no computador; ainda **não** foi para
+hospedagem.
 
 **Ordem decidida pela orientanda (02/09/2026, ajustada em 04/09/2026) —
 hospedar só quando tudo estiver pronto, não agora:**
 
-1. Metodologia do IQA-B definida com a orientadora (decisão pendente).
-2. Construir a **fórmula do IQA-B** (`bebedouros/iqab.py`).
-3. **Hospedar** o sistema (escolher o serviço na hora).
-4. **Digitar manualmente** os dados de 2024/2025 direto no sistema já
+1. ~~Metodologia do IQA-B~~ e ~~fórmula~~ — **prontas** (`bebedouros/iqab.py`,
+   versão "1.0").
+2. **Hospedar** o sistema (escolher o serviço na hora).
+3. **Digitar manualmente** os dados de 2024/2025 direto no sistema já
    hospedado — o volume de análises desse período é pequeno, não compensa
    construir um importador de planilhas para usar uma única vez.
-5. Já hospedado, seguir para a **parte pública** (mapa, abas, alertas).
+4. Já hospedado, seguir para a **parte pública** (mapa, abas, alertas).
 
 Enquanto isso, a orientanda testa localmente. Publicar continua sendo uma
 tarefa de ~30 min quando a hora chegar (ver `README-DEPLOY.md`).

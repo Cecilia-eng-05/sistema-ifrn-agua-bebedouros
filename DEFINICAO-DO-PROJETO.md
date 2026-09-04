@@ -142,23 +142,30 @@ IQA-B = (QFQ × 0,3) + (QM × 0,5) + (CO × 0,2)
 
 **Turbidez "<0,751":** conta como melhor caso possível (nota cheia no parâmetro).
 
-### 8.2 Decisões metodológicas PENDENTES (em ajuste no TCC)
+### 8.2 Decisões metodológicas — definidas com a orientadora (04/09/2026)
 
-Estas respostas ainda estão em processo de ajuste metodológico do TCC e serão
-definidas depois. O sistema deve tratá-las como **configuráveis**:
+Metodologia versão **"1.0"**, implementada em `bebedouros/iqab.py`. Base de
+referência: **limites da Portaria MS nº 888/2021**.
 
-- **Pontuação por parâmetro:** como cada parâmetro vira uma nota de 0 a 100.
-  Base de referência acordada: **limites da Portaria MS nº 888/2021**.
-- **Cálculo do QFQ:** como combinar as 5 notas de parâmetro (média simples /
-  média com pesos / puxada pela pior nota).
-- **Cálculo do QM:** como AUSENTE/PRESENTE viram nota e se **E. coli PRESENTE
-  zera o QM**.
-- **Cálculo do CO:** que nota o filtro recebe quando "dentro da validade" e
-  quando "vencido".
+- **QFQ** = 0,35·Cloro + 0,25·Turbidez + 0,20·pH + 0,20·Nitrato. Cada
+  parâmetro pontua 0 ou 100 (Turbidez tem uma faixa intermediária que pontua
+  50):
+  - Cloro residual livre: 0,20 a 5,0 mg/L → 100; fora disso → 0.
+  - Turbidez: ≤1 NTU → 100; 1,01 a 5 NTU → 50; >5 NTU → 0.
+  - pH: 6 a 9 → 100; fora disso → 0.
+  - Nitrato: ≤10 mg/L → 100; >10 mg/L → 0.
+- **QM** = 0 se E. coli PRESENTE (contaminação fecal derruba o subíndice
+  inteiro, não é uma média que suaviza). Caso contrário, 0,70·nota(E. coli)
+  + 0,30·nota(Coliformes Totais), com Presença=0 e Ausência=100.
+- **CO**: filtro dentro da validade → 100; vencido → 0.
+- **Condutividade** é monitorada mas não entra em nenhum subíndice — fica
+  só como dado de acompanhamento (explicado na aba pública de Parâmetros).
 
-Implicação para o sistema: cada IQA-B calculado deve registrar **qual versão da
-configuração/metodologia** foi usada, para que o histórico continue coerente
-quando a metodologia mudar.
+Implicação para o sistema: cada IQA-B calculado registra **qual versão da
+metodologia** foi usada (`metodologia_versao`), para que o histórico continue
+coerente se a metodologia mudar. Uma linha com algum parâmetro obrigatório
+faltando (qualquer um dos 7 acima, exceto condutividade) fica com status
+**"incompleto"** em vez de gerar uma nota — ver seção 13.
 
 ---
 
@@ -223,18 +230,18 @@ e "Crítica").
 
 ## 13. Dados históricos
 
-- **Decisão:** carregar no sistema os dados históricos existentes **desde 2023**
-  (para os gráficos de evolução já nascerem preenchidos).
-- Volume aproximado: coletas quinzenais de 2023 até hoje ≈ 50+ quinzenas × 15
-  bebedouros (a confirmar a partir das planilhas reais).
-- **A definir:** como esse histórico entra — digitação manual pela grade (inviável
-  para tantos meses) **ou** uma carga única a partir das planilhas Excel
-  existentes. A carga única a partir do Excel é o caminho realista; exige acertar
-  o formato das planilhas antigas (que pode ter variado ao longo do tempo).
-- **Ponto metodológico:** as quinzenas históricas **não têm registro da situação
-  do filtro** (nunca foi anotada). Definir como calcular o IQA-B histórico —
-  sem a dimensão CO (só QFQ + QM, com pesos renormalizados) ou deixando CO em
-  branco no histórico. Fica junto das decisões metodológicas pendentes (8.2).
+- **Decisão:** carregar no sistema os dados históricos existentes de **2024 e
+  2025** (para os gráficos de evolução já nascerem preenchidos).
+- Volume real (confirmado 04/09/2026): menor do que se imaginava — por isso a
+  entrada será **digitação manual pela grade**, direto no sistema já
+  hospedado, em vez de construir um importador de planilhas Excel para usar
+  uma única vez (ver `DESENHO-ENTRADA-E-RESULTADOS.md` seção 11).
+- **Ponto metodológico resolvido (04/09/2026):** as quinzenas de 2024/2025
+  **não têm registro da situação do filtro** (nunca foi anotada), e algumas
+  têm outros parâmetros faltando também. Em vez de calcular um IQA-B parcial
+  com pesos renormalizados, essas linhas ficam com status **"incompleto"**
+  (sem nota) — o mesmo mecanismo genérico da seção 8.2, aplicado por linha
+  conforme os dados presentes, não por regra fixa de ano.
 
 ## 14. Tela de lançamento
 
