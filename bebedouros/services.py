@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from . import iqab
 from .models import Bebedouro, Coleta
 
@@ -39,4 +41,5 @@ def recalcular_coleta(coleta):
 
 def publicar_coleta(coleta):
     coleta.status = Coleta.PUBLICADO
-    coleta.save(update_fields=["status", "atualizada_em"])
+    coleta.publicada_em = timezone.now()
+    coleta.save(update_fields=["status", "publicada_em", "atualizada_em"])

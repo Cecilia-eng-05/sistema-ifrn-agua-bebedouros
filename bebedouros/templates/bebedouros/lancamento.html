@@ -1,7 +1,7 @@
 {% extends "bebedouros/base.html" %}
 {% block conteudo %}
   <h1>Coleta de {{ coleta.data|date:"d/m/Y" }}
-    <span class="etiqueta {{ coleta.status }}">{{ coleta.get_status_display }}</span>
+    <span class="etiqueta {{ coleta.status }}">{{ coleta.situacao_texto }}</span>
   </h1>
   <a class="voltar" href="{% url 'coleta_list' %}">&larr; Voltar para a lista</a>
   <form method="post">

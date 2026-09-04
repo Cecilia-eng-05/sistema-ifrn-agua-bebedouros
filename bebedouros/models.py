@@ -37,6 +37,7 @@ class Coleta(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=RASCUNHO)
     criada_em = models.DateTimeField(auto_now_add=True)
     atualizada_em = models.DateTimeField(auto_now=True)
+    publicada_em = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-data"]
@@ -47,6 +48,11 @@ class Coleta(models.Model):
     @property
     def publicada(self):
         return self.status == self.PUBLICADO
+
+    def situacao_texto(self):
+        if self.publicada_em:
+            return f"Publicado em {self.publicada_em:%d/%m/%Y}"
+        return self.get_status_display()
 
 
 class Resultado(models.Model):

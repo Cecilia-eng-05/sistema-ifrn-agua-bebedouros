@@ -72,3 +72,18 @@ class PublicarTests(TestCase):
         r1 = Resultado.objects.get(coleta=self.coleta, bebedouro=self.b1)
         self.assertFalse(r1.esta_vazio())
         self.assertEqual(str(r1.ph), "7.20")
+
+    def test_publicar_grava_a_data_da_publicacao(self):
+        Resultado.objects.create(coleta=self.coleta, bebedouro=self.b1, ph="7.2")
+        Resultado.objects.create(coleta=self.coleta, bebedouro=self.b2, ph="7.0")
+        self.assertIsNone(self.coleta.publicada_em)
+        self.client.post(
+            f"/coletas/{self.coleta.pk}/publicar/",
+            {f"b{self.b1.id}-ph": "7.2", f"b{self.b2.id}-ph": "7.0"},
+        )
+        self.coleta.refresh_from_db()
+        self.assertIsNotNone(self.coleta.publicada_em)
+
+    def test_rascunho_nao_tem_data_de_publicacao(self):
+        response = self.client.get("/")
+        self.assertNotContains(response, "Publicado em")
