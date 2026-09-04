@@ -144,7 +144,8 @@ aceitável por ora, já que a medição está estável há anos.
 ## 6. Publicar e gerenciar coletas
 
 - **Lista de todas as coletas**, por data, cada uma com a etiqueta
-  **rascunho** ou **publicado**.
+  **rascunho** ou **"Publicado em dd/mm/aaaa"** (a data fica registrada na
+  hora de publicar; simples, sem histórico de "publicou/despublicou").
 - **Abrir** qualquer coleta (rascunho ou já publicada) mostra a mesma
   grade, com os valores já lançados.
 - **Corrigir** um valor: edita direto e salva; o valor antigo não é
