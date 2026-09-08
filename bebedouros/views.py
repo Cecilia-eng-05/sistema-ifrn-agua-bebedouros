@@ -8,7 +8,6 @@ from .forms import ColetaForm, ResultadoRowForm, parse_turbidez
 from .models import Bebedouro, Coleta, Resultado
 from .services import (
     JANELAS_LABELS,
-    SERIES_LABELS,
     alertas_internos,
     linhas_faltantes,
     publicar_coleta,
@@ -48,13 +47,9 @@ def bebedouro_detalhe(request, pk):
     janela = request.GET.get("janela", "12m")
     if janela not in ("6m", "12m", "tudo"):
         janela = "12m"
-    serie = request.GET.get("serie", "iqab")
-    if serie not in SERIES_LABELS:
-        serie = "iqab"
 
-    pontos = serie_historica(bebedouro, serie, janela, apenas_publicadas=apenas_publicadas)
-    dominio_y = (0, 100) if serie == "iqab" else None
-    grafico_dados = grafico.montar_grafico(pontos, dominio_y=dominio_y)
+    pontos = serie_historica(bebedouro, janela, apenas_publicadas=apenas_publicadas)
+    grafico_dados = grafico.montar_grafico(pontos, dominio_y=(0, 100))
 
     return render(
         request,
@@ -65,9 +60,7 @@ def bebedouro_detalhe(request, pk):
             "pesos_iqab": pesos_iqab,
             "grafico": grafico_dados,
             "janela": janela,
-            "serie": serie,
             "janelas_labels": JANELAS_LABELS,
-            "series_labels": SERIES_LABELS,
         },
     )
 

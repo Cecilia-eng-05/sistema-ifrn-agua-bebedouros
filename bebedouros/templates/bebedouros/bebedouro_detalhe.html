@@ -82,24 +82,16 @@
       <span class="grafico-selecao-grupo">
         <span class="grafico-selecao-rotulo">Período:</span>
         {% for chave, rotulo in janelas_labels.items %}
-          <a href="?janela={{ chave }}&serie={{ serie }}" class="{% if chave == janela %}ativo{% endif %}">{{ rotulo }}</a>
-        {% endfor %}
-      </span>
-      <span class="grafico-selecao-grupo">
-        <span class="grafico-selecao-rotulo">Mostrar:</span>
-        {% for chave, rotulo in series_labels.items %}
-          <a href="?janela={{ janela }}&serie={{ chave }}" class="{% if chave == serie %}ativo{% endif %}">{{ rotulo }}</a>
+          <a href="?janela={{ chave }}" class="{% if chave == janela %}ativo{% endif %}">{{ rotulo }}</a>
         {% endfor %}
       </span>
     </div>
 
     {% if grafico %}
       <svg class="grafico-svg" viewBox="0 0 {{ grafico.largura }} {{ grafico.altura }}">
-        {% if grafico.faixas %}
-          {% for faixa in grafico.faixas %}
-            <rect class="grafico-faixa faixa-{{ faixa.slug }}" x="{{ grafico.area_esq }}" y="{{ faixa.y }}" width="{{ grafico.largura_area }}" height="{{ faixa.altura }}"></rect>
-          {% endfor %}
-        {% endif %}
+        {% for faixa in grafico.faixas %}
+          <rect class="grafico-faixa faixa-{{ faixa.slug }}" x="{{ grafico.area_esq }}" y="{{ faixa.y }}" width="{{ grafico.largura_area }}" height="{{ faixa.altura }}"></rect>
+        {% endfor %}
         {% for segmento in grafico.segmentos %}
           <polyline class="grafico-linha" points="{% for p in segmento %}{{ p.x }},{{ p.y }} {% endfor %}"></polyline>
           {% for p in segmento %}

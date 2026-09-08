@@ -125,34 +125,16 @@ def alertas_internos(situacoes):
     }
 
 
-CAMPO_SERIE = {
-    "cloro": "cloro",
-    "condutividade": "condutividade",
-    "nitrato": "nitrato",
-    "turbidez": "turbidez_valor",
-    "ph": "ph",
-}
-
-SERIES_LABELS = {
-    "iqab": "IQA-B",
-    "cloro": "Cloro",
-    "condutividade": "Condutividade",
-    "nitrato": "Nitrato",
-    "turbidez": "Turbidez",
-    "ph": "pH",
-}
-
 JANELA_DIAS = {"6m": 182, "12m": 365}
 JANELAS_LABELS = {"6m": "6 meses", "12m": "12 meses", "tudo": "Tudo"}
 
 
-def serie_historica(bebedouro, serie, janela, apenas_publicadas=False):
-    """Pontos da série 'serie' ('iqab' ou uma chave de CAMPO_SERIE) deste
-    bebedouro, para o gráfico de evolução. 'janela' é uma chave de
-    JANELA_DIAS ou 'tudo'. Retorna uma lista, em ordem cronológica, de
-    {"data": date, "valor": Decimal ou None} — valor None marca um
-    intervalo sem dado (o gráfico não deve emendar uma linha por cima
-    desse ponto)."""
+def serie_historica(bebedouro, janela, apenas_publicadas=False):
+    """Pontos do IQA-B deste bebedouro ao longo do tempo, para o gráfico
+    de evolução. 'janela' é uma chave de JANELA_DIAS ou 'tudo'. Retorna
+    uma lista, em ordem cronológica, de {"data": date, "valor": Decimal
+    ou None} — valor None marca uma coleta sem IQA-B calculado (o
+    gráfico não deve emendar uma linha por cima desse ponto)."""
     resultados = (
         Resultado.objects.filter(bebedouro=bebedouro, fora_de_operacao=False)
         .select_related("coleta")
@@ -168,9 +150,6 @@ def serie_historica(bebedouro, serie, janela, apenas_publicadas=False):
     for resultado in resultados:
         if resultado.esta_vazio():
             continue
-        if serie == "iqab":
-            valor = resultado.iqab if resultado.iqab_status == iqab.CALCULADO else None
-        else:
-            valor = getattr(resultado, CAMPO_SERIE[serie])
+        valor = resultado.iqab if resultado.iqab_status == iqab.CALCULADO else None
         pontos.append({"data": resultado.coleta.data, "valor": valor})
     return pontos

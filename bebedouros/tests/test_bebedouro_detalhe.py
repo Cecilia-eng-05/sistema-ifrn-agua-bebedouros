@@ -158,26 +158,9 @@ class BebedouroDetalheTests(TestCase):
         self.assertContains(response, 'class="grafico-faixa faixa-excelente"')
         self.assertContains(response, ">12 meses<")
 
-    def test_seletor_de_janela_preserva_a_serie_escolhida(self):
-        response = self.client.get(f"/bebedouros/{self.b1.pk}/?serie=ph")
-        self.assertContains(response, 'href="?janela=6m&serie=ph"')
-
-    def test_seletor_de_serie_preserva_a_janela_escolhida(self):
-        response = self.client.get(f"/bebedouros/{self.b1.pk}/?janela=6m")
-        self.assertContains(response, 'href="?janela=6m&serie=ph"')
-
-    def test_serie_de_parametro_nao_mostra_faixas_coloridas(self):
-        coleta = Coleta.objects.create(
-            data=datetime.date.today(), status=Coleta.PUBLICADO
-        )
-        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        recalcular_coleta(coleta)
-        response = self.client.get(f"/bebedouros/{self.b1.pk}/?serie=ph")
-        # Checa o atributo class do próprio elemento, não o texto solto —
-        # 'grafico-faixa' sozinho também aparece na definição de cor no
-        # CSS compartilhado, presente em toda página independentemente do
-        # gráfico (mesma armadilha encontrada nos testes da gota).
-        self.assertNotContains(response, 'class="grafico-faixa')
+    def test_seletor_de_periodo_muda_a_janela(self):
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, 'href="?janela=6m"')
 
     def test_sem_dados_mostra_mensagem_no_lugar_do_grafico(self):
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")

@@ -195,40 +195,33 @@ class SerieHistoricaTests(TestCase):
         coleta = Coleta.objects.create(data=data, **overrides)
         return coleta
 
-    def test_serie_iqab_usa_a_nota_quando_calculado(self):
+    def test_usa_a_nota_quando_calculado(self):
         coleta = self._coleta(10)
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
-        pontos = serie_historica(self.b1, "iqab", "tudo")
+        pontos = serie_historica(self.b1, "tudo")
         self.assertEqual(len(pontos), 1)
         self.assertEqual(pontos[0]["valor"], Decimal("100"))
 
-    def test_serie_iqab_fica_none_quando_incompleto(self):
+    def test_fica_none_quando_incompleto(self):
         coleta = self._coleta(10)
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, ph=Decimal("7.0"))
         recalcular_coleta(coleta)
-        pontos = serie_historica(self.b1, "iqab", "tudo")
+        pontos = serie_historica(self.b1, "tudo")
         self.assertEqual(len(pontos), 1)
         self.assertIsNone(pontos[0]["valor"])
 
-    def test_serie_de_parametro_aparece_mesmo_com_iqab_incompleto(self):
-        coleta = self._coleta(10)
-        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, ph=Decimal("7.2"))
-        recalcular_coleta(coleta)
-        pontos = serie_historica(self.b1, "ph", "tudo")
-        self.assertEqual(pontos[0]["valor"], Decimal("7.2"))
-
     def test_linha_totalmente_vazia_nao_entra_na_serie(self):
         self._coleta(10)  # coleta existe, mas sem nenhum Resultado criado
-        pontos = serie_historica(self.b1, "iqab", "tudo")
+        pontos = serie_historica(self.b1, "tudo")
         self.assertEqual(pontos, [])
 
     def test_fora_de_operacao_nao_entra_na_serie(self):
         coleta = self._coleta(10)
         Resultado.objects.create(
-            coleta=coleta, bebedouro=self.b1, fora_de_operacao=True, ph=Decimal("7.0")
+            coleta=coleta, bebedouro=self.b1, fora_de_operacao=True, **RESULTADO_COMPLETO
         )
-        pontos = serie_historica(self.b1, "ph", "tudo")
+        pontos = serie_historica(self.b1, "tudo")
         self.assertEqual(pontos, [])
 
     def test_janela_6m_exclui_coleta_mais_antiga(self):
@@ -238,7 +231,7 @@ class SerieHistoricaTests(TestCase):
         Resultado.objects.create(coleta=recente, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(antiga)
         recalcular_coleta(recente)
-        pontos = serie_historica(self.b1, "iqab", "6m")
+        pontos = serie_historica(self.b1, "6m")
         self.assertEqual(len(pontos), 1)
         self.assertEqual(pontos[0]["data"], recente.data)
 
@@ -249,7 +242,7 @@ class SerieHistoricaTests(TestCase):
         Resultado.objects.create(coleta=recente, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(antiga)
         recalcular_coleta(recente)
-        pontos = serie_historica(self.b1, "iqab", "tudo")
+        pontos = serie_historica(self.b1, "tudo")
         self.assertEqual(len(pontos), 2)
 
     def test_pontos_em_ordem_cronologica(self):
@@ -259,19 +252,12 @@ class SerieHistoricaTests(TestCase):
         Resultado.objects.create(coleta=antiga, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(recente)
         recalcular_coleta(antiga)
-        pontos = serie_historica(self.b1, "iqab", "tudo")
+        pontos = serie_historica(self.b1, "tudo")
         self.assertEqual([p["data"] for p in pontos], [antiga.data, recente.data])
 
     def test_apenas_publicadas_ignora_rascunho(self):
         coleta = self._coleta(10)
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
-        pontos = serie_historica(self.b1, "iqab", "tudo", apenas_publicadas=True)
+        pontos = serie_historica(self.b1, "tudo", apenas_publicadas=True)
         self.assertEqual(pontos, [])
-
-    def test_turbidez_abaixo_do_limite_ainda_entra_com_o_numero(self):
-        coleta = self._coleta(10)
-        dados = {**RESULTADO_COMPLETO, "turbidez_valor": Decimal("0.751"), "turbidez_abaixo_limite": True}
-        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **dados)
-        pontos = serie_historica(self.b1, "turbidez", "tudo")
-        self.assertEqual(pontos[0]["valor"], Decimal("0.751"))
