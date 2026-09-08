@@ -58,3 +58,10 @@ class MapaTests(TestCase):
         response = self.client.get("/")
         self.assertContains(response, 'class="gota gota-md gota-vazia"')
         self.assertNotContains(response, 'class="gota gota-md gota-excelente"')
+
+    def test_visitante_ve_menu_publico_nao_o_interno(self):
+        response = self.client.get("/")
+        self.assertContains(response, ">Mapa<")
+        self.assertContains(response, ">Entrar<")
+        self.assertNotContains(response, ">Coletas<")
+        self.assertNotContains(response, ">Sair<")

@@ -265,13 +265,18 @@
     <div class="topo-inner">
       <span class="topo-nome">Sistema de Monitoramento e Gestão da Água no IFRN&nbsp;&ndash;&nbsp;CNAT</span>
       <nav>
-        <a href="{% url 'inicio' %}">Início</a>
-        <a href="{% url 'coleta_list' %}">Coletas</a>
-        <a href="/admin/bebedouros/bebedouro/">Bebedouros</a>
-        <form action="{% url 'logout' %}" method="post" style="display:inline">
-          {% csrf_token %}
-          <button type="submit" class="sair-btn">Sair</button>
-        </form>
+        {% if user.is_authenticated %}
+          <a href="{% url 'inicio' %}">Início</a>
+          <a href="{% url 'coleta_list' %}">Coletas</a>
+          <a href="/admin/bebedouros/bebedouro/">Bebedouros</a>
+          <form action="{% url 'logout' %}" method="post" style="display:inline">
+            {% csrf_token %}
+            <button type="submit" class="sair-btn">Sair</button>
+          </form>
+        {% else %}
+          <a href="{% url 'mapa' %}">Mapa</a>
+          <a href="{% url 'login' %}">Entrar</a>
+        {% endif %}
       </nav>
     </div>
     <svg class="onda" viewBox="0 0 1440 34" preserveAspectRatio="none" aria-hidden="true">

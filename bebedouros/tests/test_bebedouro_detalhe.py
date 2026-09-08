@@ -32,6 +32,19 @@ class BebedouroDetalheTests(TestCase):
         response = self.client.get("/bebedouros/9999/")
         self.assertEqual(response.status_code, 404)
 
+    def test_visitante_ve_menu_publico_nao_o_interno(self):
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, ">Mapa<")
+        self.assertNotContains(response, ">Sair<")
+        self.assertNotContains(response, ">Coletas<")
+
+    def test_logado_ve_menu_interno_nesta_pagina_tambem(self):
+        User.objects.create_user("nucleo", password="segredo")
+        self.client.login(username="nucleo", password="segredo")
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, ">Sair<")
+        self.assertContains(response, ">Coletas<")
+
     def test_sem_dados_mostra_gota_vazia(self):
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, 'class="gota gota-lg gota-vazia"')
