@@ -5,13 +5,30 @@ from django.utils.formats import number_format
 
 from .forms import ColetaForm, ResultadoRowForm, parse_turbidez
 from .models import Bebedouro, Coleta, Resultado
-from .services import linhas_faltantes, publicar_coleta, recalcular_coleta
+from .services import (
+    alertas_internos,
+    linhas_faltantes,
+    publicar_coleta,
+    recalcular_coleta,
+    situacao_atual_bebedouros,
+)
 from .validation import avisos_para_resultado
 
 
 @login_required
 def coleta_list(request):
     return render(request, "bebedouros/coleta_list.html", {"coletas": Coleta.objects.all()})
+
+
+@login_required
+def inicio(request):
+    situacoes = situacao_atual_bebedouros()
+    alertas = alertas_internos(situacoes)
+    return render(
+        request,
+        "bebedouros/inicio.html",
+        {"situacoes": situacoes, "alertas": alertas},
+    )
 
 
 @login_required

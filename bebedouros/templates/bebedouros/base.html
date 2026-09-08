@@ -112,6 +112,38 @@
     .etiqueta.publicado { background: var(--publicado-bg); color: var(--publicado-tt); }
 
     .lista-vazia { color: var(--tinta-suave); }
+
+    /* Alertas (tela Início) */
+    .alertas h2 { font-size: 16px; margin: 22px 0 10px; }
+    .alerta-bloco {
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--borda);
+    }
+    .alerta-bloco:last-child { border-bottom: 0; }
+    .alerta-titulo { font-weight: 600; min-width: 160px; }
+    .alerta-ok { color: var(--tinta-suave); font-size: 14px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .chip-ruim { background: #f7e2d3; color: #9a4a1a; border-color: #eccbab; }
+    .chip-critica { background: var(--erro-bg); color: #922; border-color: var(--erro-bd); }
+    .chip-vencido { background: var(--aviso-bg); color: #8a5a00; border-color: var(--aviso-bd); }
+
+    /* Gota d'água — identidade visual do IQA-B (DESENHO-PARTE-VISUAL.md §3).
+       Reaproveitada, nos mesmos nomes de classe, pelo mapa público e pela
+       página do bebedouro em planos futuros. */
+    .gota {
+      display: inline-block; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+    }
+    .gota-sm { width: 14px; height: 14px; }
+    .gota-vazia { background: #e4ecf0; border: 1px solid var(--borda); }
+    .gota-excelente { background: #1c6b4e; }
+    .gota-boa { background: #185a86; }
+    .gota-regular { background: #c99a2e; }
+    .gota-ruim { background: #b9601f; }
+    .gota-critica { background: #a32222; }
     @media (max-width: 620px) { main { padding: 18px 14px 48px; } h1 { font-size: 20px; } }
   </style>
 </head>
@@ -120,6 +152,7 @@
     <div class="topo-inner">
       <span class="topo-nome">Sistema de Monitoramento e Gestão da Água no IFRN&nbsp;&ndash;&nbsp;CNAT</span>
       <nav>
+        <a href="{% url 'inicio' %}">Início</a>
         <a href="{% url 'coleta_list' %}">Coletas</a>
         <a href="/admin/bebedouros/bebedouro/">Bebedouros</a>
         <form action="{% url 'logout' %}" method="post" style="display:inline">

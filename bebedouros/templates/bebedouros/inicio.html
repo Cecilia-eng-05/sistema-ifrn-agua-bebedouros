@@ -1,0 +1,73 @@
+{% extends "bebedouros/base.html" %}
+{% block titulo %}Início — Monitoramento da Água — IFRN-CNAT{% endblock %}
+{% block conteudo %}
+  <h1>Início</h1>
+
+  <section class="alertas">
+    <h2>Alertas</h2>
+
+    <div class="alerta-bloco">
+      <span class="alerta-titulo">IQA-B baixo</span>
+      {% if alertas.iqab_ruim %}
+        <span class="chips">
+          {% for s in alertas.iqab_ruim %}
+            <span class="chip chip-{{ s.resultado.iqab_faixa_slug }}">{{ s.bebedouro.codigo }}</span>
+          {% endfor %}
+        </span>
+      {% else %}
+        <span class="alerta-ok">Nenhum bebedouro abaixo de 40.</span>
+      {% endif %}
+    </div>
+
+    <div class="alerta-bloco">
+      <span class="alerta-titulo">Filtro vencido</span>
+      {% if alertas.filtro_vencido %}
+        <span class="chips">
+          {% for s in alertas.filtro_vencido %}
+            <span class="chip chip-vencido">{{ s.bebedouro.codigo }}</span>
+          {% endfor %}
+        </span>
+      {% else %}
+        <span class="alerta-ok">Nenhum filtro vencido.</span>
+      {% endif %}
+    </div>
+
+    <div class="alerta-bloco">
+      <span class="alerta-titulo">Quinzena sem dados</span>
+      {% if alertas.quinzena_sem_dados %}
+        <span class="chips">
+          {% for codigo in alertas.quinzena_sem_dados %}
+            <span class="chip chip-vencido">{{ codigo }}</span>
+          {% endfor %}
+        </span>
+      {% else %}
+        <span class="alerta-ok">Todos os bebedouros ativos têm dado na última coleta.</span>
+      {% endif %}
+    </div>
+  </section>
+
+  <div class="painel" style="margin-top:20px;">
+    <table>
+      <thead>
+        <tr><th></th><th>Código</th><th>Local</th><th>IQA-B</th><th>Última análise</th></tr>
+      </thead>
+      <tbody>
+      {% for s in situacoes %}
+        <tr>
+          <td>
+            {% if s.resultado.iqab_status == "calculado" %}
+              <span class="gota gota-sm gota-{{ s.resultado.iqab_faixa_slug }}" title="{{ s.resultado.iqab_classificacao }}"></span>
+            {% else %}
+              <span class="gota gota-sm gota-vazia"></span>
+            {% endif %}
+          </td>
+          <td class="cod">{{ s.bebedouro.codigo }}</td>
+          <td>{{ s.bebedouro.local }}</td>
+          <td>{{ s.resultado.iqab_texto|default:"—" }}</td>
+          <td>{{ s.data|date:"d/m/Y"|default:"—" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
