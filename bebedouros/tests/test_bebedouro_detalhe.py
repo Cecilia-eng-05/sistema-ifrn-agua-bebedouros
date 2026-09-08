@@ -158,6 +158,20 @@ class BebedouroDetalheTests(TestCase):
         self.assertContains(response, 'class="grafico-faixa faixa-excelente"')
         self.assertContains(response, ">12 meses<")
 
+    def test_coordenadas_do_grafico_usam_ponto_decimal(self):
+        # As coordenadas do SVG são números (ex.: y="158.8") — se o Django
+        # aplicar a formatação de número em português (vírgula decimal),
+        # o atributo vira "158,8" e o navegador não consegue mais
+        # entender o desenho.
+        import re
+
+        coleta = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
+        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(coleta)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        conteudo = response.content.decode()
+        self.assertIsNone(re.search(r'(cx|cy|x|y|width|height)="[0-9]+,[0-9]+"', conteudo))
+
     def test_seletor_de_periodo_muda_a_janela(self):
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, 'href="?janela=6m"')
@@ -203,6 +217,22 @@ class BebedouroDetalheTests(TestCase):
         data_formatada = anterior.data.strftime("%d/%m/%Y")
         self.assertContains(response, f"<summary>{data_formatada}</summary>")
         self.assertContains(response, "100 · Excelente")
+
+    def test_quinzena_anterior_mostra_os_parametros(self):
+        atual = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
+        anterior = Coleta.objects.create(
+            data=datetime.date.today() - datetime.timedelta(days=20),
+            status=Coleta.PUBLICADO,
+        )
+        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(atual)
+        recalcular_coleta(anterior)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        # Aparece uma vez em "O que é monitorado" (situação atual) e outra
+        # dentro do item expandido da quinzena anterior.
+        self.assertContains(response, "Cloro Residual Livre", count=2)
+        self.assertContains(response, "Coliformes Totais", count=2)
 
     def test_situacao_atual_nao_aparece_duplicada_no_historico(self):
         atual = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)

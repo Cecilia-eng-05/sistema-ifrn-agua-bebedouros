@@ -1,4 +1,5 @@
 {% extends "bebedouros/base.html" %}
+{% load l10n %}
 {% block titulo %}{{ bebedouro.codigo }} — Monitoramento da Água — IFRN-CNAT{% endblock %}
 {% block conteudo %}
   <div class="cabecalho-bebedouro">
@@ -88,6 +89,7 @@
     </div>
 
     {% if grafico %}
+      {% localize off %}
       <svg class="grafico-svg" viewBox="0 0 {{ grafico.largura }} {{ grafico.altura }}">
         {% for faixa in grafico.faixas %}
           <rect class="grafico-faixa faixa-{{ faixa.slug }}" x="{{ grafico.area_esq }}" y="{{ faixa.y }}" width="{{ grafico.largura_area }}" height="{{ faixa.altura }}"></rect>
@@ -101,6 +103,7 @@
         <text class="grafico-eixo-data" x="{{ grafico.area_esq }}" y="{{ grafico.altura|add:"-6" }}">{{ grafico.data_min|date:"d/m/Y" }}</text>
         <text class="grafico-eixo-data" x="{{ grafico.area_dir }}" y="{{ grafico.altura|add:"-6" }}" text-anchor="end">{{ grafico.data_max|date:"d/m/Y" }}</text>
       </svg>
+      {% endlocalize %}
     {% else %}
       <p class="grafico-vazio">Ainda não há dados suficientes para o gráfico.</p>
     {% endif %}
@@ -120,6 +123,18 @@
               {% if resultado.filtro == "vencido" %}
                 <p>Filtro fora da validade.</p>
               {% endif %}
+              <table>
+                <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
+                <tbody>
+                  <tr><td>Cloro Residual Livre</td><td>{{ resultado.cloro|default:"—" }} mg/L Cl₂</td></tr>
+                  <tr><td>Condutividade Elétrica</td><td>{{ resultado.condutividade|default:"—" }} µS/cm</td></tr>
+                  <tr><td>Nitrato</td><td>{{ resultado.nitrato|default:"—" }} mg/L N</td></tr>
+                  <tr><td>Turbidez</td><td>{{ resultado.turbidez_texto|default:"—" }} UNT</td></tr>
+                  <tr><td>pH</td><td>{{ resultado.ph|default:"—" }}</td></tr>
+                  <tr><td>Coliformes Totais</td><td>{{ resultado.get_coliformes_totais_display|default:"—" }}</td></tr>
+                  <tr><td>E. coli</td><td>{{ resultado.get_ecoli_display|default:"—" }}</td></tr>
+                </tbody>
+              </table>
             {% endif %}
           </div>
         </details>
