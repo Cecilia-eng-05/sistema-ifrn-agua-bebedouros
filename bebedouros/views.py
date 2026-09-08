@@ -3,14 +3,17 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.formats import number_format
 
-from . import iqab
+from . import grafico, iqab
 from .forms import ColetaForm, ResultadoRowForm, parse_turbidez
 from .models import Bebedouro, Coleta, Resultado
 from .services import (
+    JANELAS_LABELS,
+    SERIES_LABELS,
     alertas_internos,
     linhas_faltantes,
     publicar_coleta,
     recalcular_coleta,
+    serie_historica,
     situacao_atual_bebedouro,
     situacao_atual_bebedouros,
 )
@@ -42,10 +45,30 @@ def bebedouro_detalhe(request, pk):
         "qm": int(iqab.PESO_QM * 100),
         "co": int(iqab.PESO_CO * 100),
     }
+    janela = request.GET.get("janela", "12m")
+    if janela not in ("6m", "12m", "tudo"):
+        janela = "12m"
+    serie = request.GET.get("serie", "iqab")
+    if serie not in SERIES_LABELS:
+        serie = "iqab"
+
+    pontos = serie_historica(bebedouro, serie, janela, apenas_publicadas=apenas_publicadas)
+    dominio_y = (0, 100) if serie == "iqab" else None
+    grafico_dados = grafico.montar_grafico(pontos, dominio_y=dominio_y)
+
     return render(
         request,
         "bebedouros/bebedouro_detalhe.html",
-        {"bebedouro": bebedouro, "situacao": situacao, "pesos_iqab": pesos_iqab},
+        {
+            "bebedouro": bebedouro,
+            "situacao": situacao,
+            "pesos_iqab": pesos_iqab,
+            "grafico": grafico_dados,
+            "janela": janela,
+            "serie": serie,
+            "janelas_labels": JANELAS_LABELS,
+            "series_labels": SERIES_LABELS,
+        },
     )
 
 

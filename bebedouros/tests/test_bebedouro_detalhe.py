@@ -143,3 +143,61 @@ class BebedouroDetalheTests(TestCase):
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, "&lt;")
+
+    def test_grafico_padrao_e_12_meses_e_iqab(self):
+        coleta = Coleta.objects.create(
+            data=datetime.date.today(), status=Coleta.PUBLICADO
+        )
+        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(coleta)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        # Escopado a 'grafico-ponto' (não '<circle' sozinho) porque o
+        # ícone da foto também usa um <circle> (o "sol" do ícone de
+        # imagem), sem relação com o gráfico.
+        self.assertContains(response, 'class="grafico-ponto"', count=1)
+        self.assertContains(response, 'class="grafico-faixa faixa-excelente"')
+        self.assertContains(response, ">12 meses<")
+
+    def test_seletor_de_janela_preserva_a_serie_escolhida(self):
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/?serie=ph")
+        self.assertContains(response, 'href="?janela=6m&serie=ph"')
+
+    def test_seletor_de_serie_preserva_a_janela_escolhida(self):
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/?janela=6m")
+        self.assertContains(response, 'href="?janela=6m&serie=ph"')
+
+    def test_serie_de_parametro_nao_mostra_faixas_coloridas(self):
+        coleta = Coleta.objects.create(
+            data=datetime.date.today(), status=Coleta.PUBLICADO
+        )
+        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(coleta)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/?serie=ph")
+        # Checa o atributo class do próprio elemento, não o texto solto —
+        # 'grafico-faixa' sozinho também aparece na definição de cor no
+        # CSS compartilhado, presente em toda página independentemente do
+        # gráfico (mesma armadilha encontrada nos testes da gota).
+        self.assertNotContains(response, 'class="grafico-faixa')
+
+    def test_sem_dados_mostra_mensagem_no_lugar_do_grafico(self):
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "Ainda não há dados suficientes para o gráfico.")
+
+    def test_gap_gera_dois_segmentos_de_linha(self):
+        antiga = Coleta.objects.create(
+            data=datetime.date.today() - datetime.timedelta(days=60),
+            status=Coleta.PUBLICADO,
+        )
+        meio = Coleta.objects.create(
+            data=datetime.date.today() - datetime.timedelta(days=30),
+            status=Coleta.PUBLICADO,
+        )
+        recente = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
+        Resultado.objects.create(coleta=antiga, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=meio, bebedouro=self.b1, ph=Decimal("7.0"))  # incompleto
+        Resultado.objects.create(coleta=recente, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        for c in (antiga, meio, recente):
+            recalcular_coleta(c)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "<polyline", count=2)
+        self.assertContains(response, 'class="grafico-ponto"', count=2)

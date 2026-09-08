@@ -184,6 +184,26 @@
     .cartao-indice-peso { font-size: 12px; color: var(--tinta-suave); }
     .cartao-indice-nota { font-size: 22px; font-weight: 700; }
     .cartao-indice-motivo { font-size: 13px; color: #8a5a00; }
+
+    /* Gráfico de evolução */
+    .grafico-selecao {
+      display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 12px; font-size: 14px;
+    }
+    .grafico-selecao-grupo { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+    .grafico-selecao-rotulo { color: var(--tinta-suave); }
+    .grafico-selecao a { color: var(--tinta-suave); text-decoration: none; }
+    .grafico-selecao a:hover { text-decoration: underline; }
+    .grafico-selecao a.ativo { color: var(--profunda); font-weight: 700; }
+    .grafico-svg { width: 100%; height: auto; }
+    .grafico-linha { fill: none; stroke: var(--profunda-2); stroke-width: 2; }
+    .grafico-ponto { fill: var(--profunda-2); }
+    .grafico-eixo-data { font-size: 11px; fill: var(--tinta-suave); }
+    .grafico-faixa.faixa-excelente { fill: #dbf1e6; }
+    .grafico-faixa.faixa-boa { fill: #dcecf6; }
+    .grafico-faixa.faixa-regular { fill: #faefd5; }
+    .grafico-faixa.faixa-ruim { fill: #f7e2d3; }
+    .grafico-faixa.faixa-critica { fill: #f6dcdc; }
+    .grafico-vazio { color: var(--tinta-suave); }
     @media (max-width: 620px) { main { padding: 18px 14px 48px; } h1 { font-size: 20px; } }
   </style>
 </head>
