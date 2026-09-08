@@ -6,6 +6,7 @@ from django.test import TestCase
 from bebedouros.models import Bebedouro, Coleta, Resultado
 from bebedouros.services import (
     alertas_internos,
+    historico_bebedouro,
     linhas_faltantes,
     recalcular_coleta,
     serie_historica,
@@ -261,3 +262,84 @@ class SerieHistoricaTests(TestCase):
         recalcular_coleta(coleta)
         pontos = serie_historica(self.b1, "tudo", apenas_publicadas=True)
         self.assertEqual(pontos, [])
+
+
+class HistoricoBebedouroTests(TestCase):
+    def setUp(self):
+        self.b1 = Bebedouro.objects.create(numero=1)
+
+    def _coleta(self, dias_atras, **overrides):
+        data = datetime.date.today() - datetime.timedelta(days=dias_atras)
+        coleta = Coleta.objects.create(data=data, **overrides)
+        return coleta
+
+    def test_nao_inclui_a_situacao_atual(self):
+        coleta = self._coleta(5)
+        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(coleta)
+        historico = historico_bebedouro(self.b1)
+        self.assertEqual(historico, [])
+
+    def test_inclui_coleta_anterior_a_atual(self):
+        atual = self._coleta(5)
+        anterior = self._coleta(20)
+        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(atual)
+        recalcular_coleta(anterior)
+        historico = historico_bebedouro(self.b1)
+        self.assertEqual(len(historico), 1)
+        self.assertEqual(historico[0].coleta, anterior)
+
+    def test_inclui_linha_fora_de_operacao(self):
+        atual = self._coleta(5)
+        anterior = self._coleta(20)
+        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, fora_de_operacao=True)
+        recalcular_coleta(atual)
+        recalcular_coleta(anterior)
+        historico = historico_bebedouro(self.b1)
+        self.assertEqual(len(historico), 1)
+        self.assertTrue(historico[0].fora_de_operacao)
+
+    def test_exclui_linha_totalmente_vazia(self):
+        atual = self._coleta(5)
+        vazia = self._coleta(20)
+        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=vazia, bebedouro=self.b1)
+        recalcular_coleta(atual)
+        recalcular_coleta(vazia)
+        historico = historico_bebedouro(self.b1)
+        self.assertEqual(historico, [])
+
+    def test_exclui_coleta_com_mais_de_12_meses(self):
+        atual = self._coleta(5)
+        antiga = self._coleta(400)
+        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=antiga, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(atual)
+        recalcular_coleta(antiga)
+        historico = historico_bebedouro(self.b1)
+        self.assertEqual(historico, [])
+
+    def test_ordem_mais_recente_primeiro(self):
+        atual = self._coleta(5)
+        meio = self._coleta(20)
+        antiga = self._coleta(35)
+        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=meio, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=antiga, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        for c in (atual, meio, antiga):
+            recalcular_coleta(c)
+        historico = historico_bebedouro(self.b1)
+        self.assertEqual([r.coleta for r in historico], [meio, antiga])
+
+    def test_apenas_publicadas_ignora_rascunho(self):
+        atual = self._coleta(5, status=Coleta.PUBLICADO)
+        anterior = self._coleta(20, status=Coleta.RASCUNHO)
+        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(atual)
+        recalcular_coleta(anterior)
+        historico = historico_bebedouro(self.b1, apenas_publicadas=True)
+        self.assertEqual(historico, [])

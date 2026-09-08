@@ -9,6 +9,7 @@ from .models import Bebedouro, Coleta, Resultado
 from .services import (
     JANELAS_LABELS,
     alertas_internos,
+    historico_bebedouro,
     linhas_faltantes,
     publicar_coleta,
     recalcular_coleta,
@@ -50,6 +51,7 @@ def bebedouro_detalhe(request, pk):
 
     pontos = serie_historica(bebedouro, janela, apenas_publicadas=apenas_publicadas)
     grafico_dados = grafico.montar_grafico(pontos, dominio_y=(0, 100))
+    historico = historico_bebedouro(bebedouro, apenas_publicadas=apenas_publicadas)
 
     return render(
         request,
@@ -61,6 +63,7 @@ def bebedouro_detalhe(request, pk):
             "grafico": grafico_dados,
             "janela": janela,
             "janelas_labels": JANELAS_LABELS,
+            "historico": historico,
         },
     )
 

@@ -184,3 +184,43 @@ class BebedouroDetalheTests(TestCase):
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, "<polyline", count=2)
         self.assertContains(response, 'class="grafico-ponto"', count=2)
+
+    def test_sem_quinzenas_anteriores_mostra_mensagem(self):
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "Nenhuma quinzena anterior nos últimos 12 meses.")
+
+    def test_quinzena_anterior_aparece_fechada_so_com_a_data(self):
+        atual = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
+        anterior = Coleta.objects.create(
+            data=datetime.date.today() - datetime.timedelta(days=20),
+            status=Coleta.PUBLICADO,
+        )
+        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(atual)
+        recalcular_coleta(anterior)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        data_formatada = anterior.data.strftime("%d/%m/%Y")
+        self.assertContains(response, f"<summary>{data_formatada}</summary>")
+        self.assertContains(response, "100 · Excelente")
+
+    def test_situacao_atual_nao_aparece_duplicada_no_historico(self):
+        atual = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
+        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(atual)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        data_formatada = atual.data.strftime("%d/%m/%Y")
+        self.assertNotContains(response, f"<summary>{data_formatada}</summary>")
+
+    def test_quinzena_fora_de_operacao_mostra_aviso(self):
+        atual = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
+        anterior = Coleta.objects.create(
+            data=datetime.date.today() - datetime.timedelta(days=20),
+            status=Coleta.PUBLICADO,
+        )
+        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, fora_de_operacao=True)
+        recalcular_coleta(atual)
+        recalcular_coleta(anterior)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "Fora de operação nesta data.")

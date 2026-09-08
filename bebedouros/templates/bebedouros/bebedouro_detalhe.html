@@ -105,4 +105,27 @@
       <p class="grafico-vazio">Ainda não há dados suficientes para o gráfico.</p>
     {% endif %}
   </section>
+
+  <section class="quinzenas-anteriores">
+    <h2>Quinzenas anteriores</h2>
+    {% if historico %}
+      {% for resultado in historico %}
+        <details class="historico-item">
+          <summary>{{ resultado.coleta.data|date:"d/m/Y" }}</summary>
+          <div class="historico-detalhe">
+            {% if resultado.fora_de_operacao %}
+              <p>Fora de operação nesta data.</p>
+            {% else %}
+              <p>IQA-B: {{ resultado.iqab_texto }}</p>
+              {% if resultado.filtro == "vencido" %}
+                <p>Filtro fora da validade.</p>
+              {% endif %}
+            {% endif %}
+          </div>
+        </details>
+      {% endfor %}
+    {% else %}
+      <p class="historico-vazio">Nenhuma quinzena anterior nos últimos 12 meses.</p>
+    {% endif %}
+  </section>
 {% endblock %}

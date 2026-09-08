@@ -153,3 +153,29 @@ def serie_historica(bebedouro, janela, apenas_publicadas=False):
         valor = resultado.iqab if resultado.iqab_status == iqab.CALCULADO else None
         pontos.append({"data": resultado.coleta.data, "valor": valor})
     return pontos
+
+
+def historico_bebedouro(bebedouro, apenas_publicadas=False):
+    """Coletas anteriores à situação atual deste bebedouro, dos últimos
+    12 meses, para a lista 'Quinzenas anteriores' da página do bebedouro
+    (a situação atual já aparece no topo da página, então não entra
+    aqui). Retorna uma lista de Resultado, mais recente primeiro."""
+    atual = _ultimo_resultado_valido(bebedouro, apenas_publicadas=apenas_publicadas)
+    resultados = (
+        Resultado.objects.filter(bebedouro=bebedouro)
+        .select_related("coleta")
+        .order_by("-coleta__data")
+    )
+    if apenas_publicadas:
+        resultados = resultados.filter(coleta__status=Coleta.PUBLICADO)
+    limite = datetime.date.today() - datetime.timedelta(days=JANELA_DIAS["12m"])
+    resultados = resultados.filter(coleta__data__gte=limite)
+
+    historico = []
+    for resultado in resultados:
+        if atual and resultado.pk == atual.pk:
+            continue
+        if resultado.esta_vazio() and not resultado.fora_de_operacao:
+            continue
+        historico.append(resultado)
+    return historico

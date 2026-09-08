@@ -204,6 +204,22 @@
     .grafico-faixa.faixa-ruim { fill: #f7e2d3; }
     .grafico-faixa.faixa-critica { fill: #f6dcdc; }
     .grafico-vazio { color: var(--tinta-suave); }
+
+    /* Quinzenas anteriores */
+    .historico-item {
+      background: var(--superficie); border: 1px solid var(--borda); border-radius: 8px;
+      margin-bottom: 6px; padding: 2px 14px;
+    }
+    .historico-item summary {
+      cursor: pointer; padding: 8px 0; font-weight: 600; color: var(--profunda);
+      list-style: none;
+    }
+    .historico-item summary::-webkit-details-marker { display: none; }
+    .historico-item summary::before { content: "▸ "; color: var(--tinta-suave); }
+    .historico-item[open] summary::before { content: "▾ "; }
+    .historico-detalhe { padding: 0 0 12px; font-size: 14px; }
+    .historico-detalhe p { margin: 4px 0; }
+    .historico-vazio { color: var(--tinta-suave); }
     @media (max-width: 620px) { main { padding: 18px 14px 48px; } h1 { font-size: 20px; } }
   </style>
 </head>
