@@ -48,22 +48,24 @@
     .topo nav a:hover, .topo .sair-btn:hover { color: #fff; text-decoration: underline; }
     .onda { display: block; width: 100%; height: 34px; }
 
-    /* Cabeçalho das telas públicas — abas, no lugar da barra do topo */
+    /* Cabeçalho das telas públicas — faixa na cor institucional, com
+       abas por cima, no lugar da barra interna com Início/Coletas/Sair */
+    .faixa-publica { background: var(--profunda); }
     .abas-publicas {
       display: flex; gap: 4px; max-width: 1320px; margin: 0 auto;
-      padding: 16px 20px 0; border-bottom: 1px solid var(--borda);
+      padding: 14px 20px 0;
     }
     .aba {
       display: inline-block; padding: 9px 20px; border-radius: 10px 10px 0 0;
-      background: var(--clara); color: var(--profunda-2); text-decoration: none;
+      background: rgba(255, 255, 255, 0.14); color: #cfe6ef; text-decoration: none;
       font-size: 14px; font-weight: 600;
-      border: 1px solid var(--borda); border-bottom: none;
     }
-    .aba:hover { background: #eef7fa; }
+    .aba:hover { background: rgba(255, 255, 255, 0.24); color: #fff; }
     .aba-ativa {
       background: var(--fundo); color: var(--profunda); font-weight: 700;
-      margin-bottom: -1px; border-bottom: 1px solid var(--fundo);
+      margin-bottom: -1px;
     }
+    .aba-ativa:hover { background: var(--fundo); color: var(--profunda); }
     .rodape-publico { text-align: center; padding: 10px 20px 34px; }
     .rodape-publico a { color: var(--tinta-suave); font-size: 12px; text-decoration: none; }
     .rodape-publico a:hover { text-decoration: underline; }
@@ -301,9 +303,13 @@
       </svg>
     </header>
   {% else %}
-    <nav class="abas-publicas">
-      <a href="{% url 'mapa' %}" class="aba{% if request.resolver_match.url_name == 'mapa' %} aba-ativa{% endif %}">Mapa</a>
-    </nav>
+    <div class="faixa-publica">
+      <nav class="abas-publicas">
+        <a href="{% url 'mapa' %}" class="aba{% if request.resolver_match.url_name == 'mapa' %} aba-ativa{% endif %}">Mapa</a>
+        <a href="{% url 'entenda_iqab' %}" class="aba{% if request.resolver_match.url_name == 'entenda_iqab' %} aba-ativa{% endif %}">Entenda o IQA-B</a>
+        <a href="{% url 'alertas_publico' %}" class="aba{% if request.resolver_match.url_name == 'alertas_publico' %} aba-ativa{% endif %}">Alertas</a>
+      </nav>
+    </div>
   {% endif %}
   <main>
     {% for message in messages %}

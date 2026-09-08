@@ -55,6 +55,14 @@ def mapa(request):
     return render(request, "bebedouros/mapa.html", {"pontos": pontos})
 
 
+def entenda_iqab(request):
+    return render(request, "bebedouros/entenda_iqab.html")
+
+
+def alertas_publico(request):
+    return render(request, "bebedouros/alertas_publico.html")
+
+
 @login_required
 def coleta_list(request):
     return render(request, "bebedouros/coleta_list.html", {"coletas": Coleta.objects.all()})
