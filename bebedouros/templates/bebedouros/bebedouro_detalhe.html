@@ -1,0 +1,71 @@
+{% extends "bebedouros/base.html" %}
+{% block titulo %}{{ bebedouro.codigo }} — Monitoramento da Água — IFRN-CNAT{% endblock %}
+{% block conteudo %}
+  <div class="cabecalho-bebedouro">
+    <div class="foto-placeholder" aria-hidden="true"></div>
+    <div class="gota-grande-wrap">
+      {% if situacao.resultado.iqab_status == "calculado" %}
+        <span class="gota gota-lg gota-{{ situacao.resultado.iqab_faixa_slug }}"></span>
+        <span class="gota-numero-grande">{{ situacao.resultado.iqab }}</span>
+      {% else %}
+        <span class="gota gota-lg gota-vazia"></span>
+      {% endif %}
+    </div>
+    <div class="cabecalho-info">
+      <h1>{{ bebedouro.codigo }} — {{ bebedouro.local }}</h1>
+      {% if situacao.resultado.iqab_status == "calculado" %}
+        <p class="cabecalho-status">{{ situacao.resultado.iqab_classificacao }} · última análise em {{ situacao.data|date:"d/m/Y" }}</p>
+      {% else %}
+        <p class="cabecalho-status">Ainda não há um IQA-B calculado para este bebedouro.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if situacao.resultado.filtro == "vencido" %}
+    <div class="msg warning">Filtro fora da validade na última coleta.</div>
+  {% endif %}
+
+  {% if user.is_authenticated %}
+    <section class="cartoes-indice">
+      <h2>De onde vem a nota</h2>
+      <div class="cartoes-indice-grid">
+        <div class="cartao-indice">
+          <span class="cartao-indice-nome">Físico-química da água</span>
+          <span class="cartao-indice-peso">peso {{ pesos_iqab.qfq }}%</span>
+          <span class="cartao-indice-nota">{{ situacao.resultado.iqab_qfq|default:"—" }}</span>
+        </div>
+        <div class="cartao-indice">
+          <span class="cartao-indice-nome">Presença de bactérias</span>
+          <span class="cartao-indice-peso">peso {{ pesos_iqab.qm }}%</span>
+          <span class="cartao-indice-nota">{{ situacao.resultado.iqab_qm|default:"—" }}</span>
+        </div>
+        <div class="cartao-indice">
+          <span class="cartao-indice-nome">Situação do filtro</span>
+          <span class="cartao-indice-peso">peso {{ pesos_iqab.co }}%</span>
+          <span class="cartao-indice-nota">{{ situacao.resultado.iqab_co|default:"—" }}</span>
+          {% if situacao.resultado.filtro == "vencido" %}
+            <span class="cartao-indice-motivo">Filtro fora da validade na data da coleta.</span>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="parametros">
+    <h2>O que é monitorado nesta água</h2>
+    <div class="painel">
+      <table>
+        <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
+        <tbody>
+          <tr><td>Cloro Residual Livre</td><td>{{ situacao.resultado.cloro|default:"—" }} mg/L Cl₂</td></tr>
+          <tr><td>Condutividade Elétrica</td><td>{{ situacao.resultado.condutividade|default:"—" }} µS/cm</td></tr>
+          <tr><td>Nitrato</td><td>{{ situacao.resultado.nitrato|default:"—" }} mg/L N</td></tr>
+          <tr><td>Turbidez</td><td>{{ situacao.resultado.turbidez_texto|default:"—" }} UNT</td></tr>
+          <tr><td>pH</td><td>{{ situacao.resultado.ph|default:"—" }}</td></tr>
+          <tr><td>Coliformes Totais</td><td>{{ situacao.resultado.get_coliformes_totais_display|default:"—" }}</td></tr>
+          <tr><td>E. coli</td><td>{{ situacao.resultado.get_ecoli_display|default:"—" }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

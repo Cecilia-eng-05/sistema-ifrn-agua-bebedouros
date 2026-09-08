@@ -42,7 +42,7 @@ class InicioTests(TestCase):
     def test_bebedouro_sem_resultado_mostra_gota_vazia(self):
         Bebedouro.objects.create(numero=1)
         response = self.client.get("/inicio/")
-        self.assertContains(response, "gota-vazia")
+        self.assertContains(response, 'class="gota gota-sm gota-vazia"')
 
     def test_bebedouro_com_iqab_mostra_gota_colorida_e_data(self):
         b1 = Bebedouro.objects.create(numero=1)
@@ -50,7 +50,7 @@ class InicioTests(TestCase):
         Resultado.objects.create(coleta=coleta, bebedouro=b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
         response = self.client.get("/inicio/")
-        self.assertContains(response, "gota-excelente")
+        self.assertContains(response, 'class="gota gota-sm gota-excelente"')
         self.assertContains(response, "01/09/2026")
         self.assertContains(response, "Excelente")
 

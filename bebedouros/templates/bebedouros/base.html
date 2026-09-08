@@ -144,6 +144,39 @@
     .gota-regular { background: #c99a2e; }
     .gota-ruim { background: #b9601f; }
     .gota-critica { background: #a32222; }
+    .gota-lg { width: 64px; height: 64px; }
+    .gota-grande-wrap {
+      position: relative; display: inline-block; width: 64px; height: 64px; flex-shrink: 0;
+    }
+    .gota-grande-wrap .gota-lg { position: absolute; inset: 0; }
+    .gota-numero-grande {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; color: #fff;
+    }
+
+    /* Página do bebedouro */
+    .cabecalho-bebedouro {
+      display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 6px;
+    }
+    .foto-placeholder {
+      width: 96px; height: 96px; border-radius: 12px; flex-shrink: 0;
+      background: var(--clara); border: 1px solid var(--borda);
+    }
+    .cabecalho-info { flex: 1 1 240px; }
+    .cabecalho-status { color: var(--tinta-suave); margin: 2px 0 0; }
+    .cartoes-indice, .parametros { margin-top: 20px; }
+    .cartoes-indice h2, .parametros h2 { font-size: 16px; margin: 0 0 10px; }
+    .cartoes-indice-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+    .cartao-indice {
+      background: var(--superficie); border: 1px solid var(--borda); border-radius: 10px;
+      padding: 12px 14px; flex: 1 1 180px; min-width: 180px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .cartao-indice-nome { font-weight: 600; }
+    .cartao-indice-peso { font-size: 12px; color: var(--tinta-suave); }
+    .cartao-indice-nota { font-size: 22px; font-weight: 700; }
+    .cartao-indice-motivo { font-size: 13px; color: #8a5a00; }
     @media (max-width: 620px) { main { padding: 18px 14px 48px; } h1 { font-size: 20px; } }
   </style>
 </head>

@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.formats import number_format
 
+from . import iqab
 from .forms import ColetaForm, ResultadoRowForm, parse_turbidez
 from .models import Bebedouro, Coleta, Resultado
 from .services import (
@@ -10,6 +11,7 @@ from .services import (
     linhas_faltantes,
     publicar_coleta,
     recalcular_coleta,
+    situacao_atual_bebedouro,
     situacao_atual_bebedouros,
 )
 from .validation import avisos_para_resultado
@@ -28,6 +30,22 @@ def inicio(request):
         request,
         "bebedouros/inicio.html",
         {"situacoes": situacoes, "alertas": alertas},
+    )
+
+
+def bebedouro_detalhe(request, pk):
+    bebedouro = get_object_or_404(Bebedouro, pk=pk)
+    apenas_publicadas = not request.user.is_authenticated
+    situacao = situacao_atual_bebedouro(bebedouro, apenas_publicadas=apenas_publicadas)
+    pesos_iqab = {
+        "qfq": int(iqab.PESO_QFQ * 100),
+        "qm": int(iqab.PESO_QM * 100),
+        "co": int(iqab.PESO_CO * 100),
+    }
+    return render(
+        request,
+        "bebedouros/bebedouro_detalhe.html",
+        {"bebedouro": bebedouro, "situacao": situacao, "pesos_iqab": pesos_iqab},
     )
 
 

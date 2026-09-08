@@ -129,6 +129,17 @@ class Resultado(models.Model):
         }
         return mapa.get(self.iqab_classificacao, "")
 
+    def turbidez_texto(self):
+        """Texto de exibição da turbidez — mesmo formato aceito na grade
+        ('<0,751' quando abaixo do limite de detecção; vazio sem dado)."""
+        if self.turbidez_abaixo_limite and self.turbidez_valor is not None:
+            return f"<{number_format(self.turbidez_valor)}"
+        if self.turbidez_abaixo_limite:
+            return "<"
+        if self.turbidez_valor is not None:
+            return number_format(self.turbidez_valor)
+        return ""
+
     def esta_vazio(self):
         numericos = [self.cloro, self.condutividade, self.nitrato, self.turbidez_valor, self.ph]
         if any(v is not None for v in numericos):
