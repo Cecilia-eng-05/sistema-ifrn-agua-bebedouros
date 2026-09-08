@@ -127,12 +127,21 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        # Em desenvolvimento (DEBUG=1), usa o storage simples do Django —
+        # não exige rodar collectstatic antes de cada teste/execução
+        # local. Em produção, usa o do whitenoise (arquivos com hash no
+        # nome, cacheáveis por muito tempo), que exige collectstatic no
+        # deploy.
+        'BACKEND': (
+            'django.contrib.staticfiles.storage.StaticFilesStorage'
+            if DEBUG else
+            'whitenoise.storage.CompressedManifestStaticFilesStorage'
+        ),
     },
 }
 
 LOGIN_URL = '/entrar/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/inicio/'
 LOGOUT_REDIRECT_URL = '/entrar/'
 
 # Endurecimento aplicado só em produção (quando DEBUG=0).

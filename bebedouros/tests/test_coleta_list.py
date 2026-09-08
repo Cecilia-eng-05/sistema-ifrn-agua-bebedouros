@@ -14,7 +14,7 @@ class ColetaListTests(TestCase):
     def test_lists_collections_newest_first(self):
         Coleta.objects.create(data=datetime.date(2026, 8, 1))
         Coleta.objects.create(data=datetime.date(2026, 9, 1))
-        response = self.client.get("/")
+        response = self.client.get("/coletas/")
         self.assertEqual(response.status_code, 200)
         corpo = response.content.decode()
         self.assertLess(corpo.index("01/09/2026"), corpo.index("01/08/2026"))

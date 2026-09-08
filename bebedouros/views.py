@@ -20,6 +20,40 @@ from .services import (
 from .validation import avisos_para_resultado
 
 
+# Posição (x%, y%) de cada bebedouro na imagem do mapa do campus
+# (bebedouros/static/bebedouros/img/mapa-campus.png), medida a partir dos
+# pinos marcados manualmente numa cópia dessa mesma imagem. Um bebedouro
+# sem posição aqui simplesmente não aparece no mapa.
+POSICOES_MAPA = {
+    1: (63.0, 25.9),
+    2: (57.6, 28.1),
+    3: (49.1, 16.3),
+    4: (38.9, 28.9),
+    5: (44.3, 49.6),
+    6: (58.2, 51.9),
+    7: (76.6, 58.5),
+    8: (72.3, 71.1),
+    9: (73.4, 68.1),
+    10: (74.2, 43.7),
+    11: (73.0, 20.7),
+    12: (86.2, 28.9),
+    13: (92.6, 31.9),
+    14: (88.6, 36.7),
+    15: (91.1, 42.2),
+}
+
+
+def mapa(request):
+    situacoes = situacao_atual_bebedouros(apenas_publicadas=True)
+    pontos = []
+    for situacao in situacoes:
+        posicao = POSICOES_MAPA.get(situacao["bebedouro"].numero)
+        if posicao is None:
+            continue
+        pontos.append({**situacao, "x": posicao[0], "y": posicao[1]})
+    return render(request, "bebedouros/mapa.html", {"pontos": pontos})
+
+
 @login_required
 def coleta_list(request):
     return render(request, "bebedouros/coleta_list.html", {"coletas": Coleta.objects.all()})

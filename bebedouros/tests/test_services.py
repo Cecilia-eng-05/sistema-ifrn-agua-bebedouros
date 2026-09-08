@@ -81,6 +81,20 @@ class SituacaoAtualBebedourosTests(TestCase):
         self.assertEqual(s1["resultado"], r_antiga)
         self.assertEqual(s1["data"], datetime.date(2026, 8, 1))
 
+    def test_apenas_publicadas_ignora_rascunho(self):
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.RASCUNHO)
+        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, ph=Decimal("7.0"))
+        situacoes = situacao_atual_bebedouros(apenas_publicadas=True)
+        s1 = [s for s in situacoes if s["bebedouro"] == self.b1][0]
+        self.assertIsNone(s1["resultado"])
+
+    def test_apenas_publicadas_usa_a_publicada(self):
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
+        resultado = Resultado.objects.create(coleta=coleta, bebedouro=self.b1, ph=Decimal("7.0"))
+        situacoes = situacao_atual_bebedouros(apenas_publicadas=True)
+        s1 = [s for s in situacoes if s["bebedouro"] == self.b1][0]
+        self.assertEqual(s1["resultado"], resultado)
+
 
 class AlertasInternosTests(TestCase):
     def setUp(self):

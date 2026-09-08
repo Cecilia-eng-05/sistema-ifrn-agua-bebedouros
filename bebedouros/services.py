@@ -65,17 +65,19 @@ def _ultimo_resultado_valido(bebedouro, apenas_publicadas=False):
     return None
 
 
-def situacao_atual_bebedouros():
-    """Situação mais recente de cada bebedouro, para a tela Início.
+def situacao_atual_bebedouros(apenas_publicadas=False):
+    """Situação mais recente de cada bebedouro, para a tela Início e para
+    o mapa público.
 
     Retorna uma lista, na mesma ordem de Bebedouro.objects.all() (por
     número), de dicts: {"bebedouro": Bebedouro, "resultado": Resultado ou
     None, "data": date ou None}. 'resultado' é o resultado não vazio mais
     recente daquele bebedouro; None se o bebedouro nunca teve um
-    lançamento com dado."""
+    lançamento com dado. apenas_publicadas=True restringe às coletas já
+    publicadas (usado pelo mapa, que é público)."""
     situacoes = []
     for bebedouro in Bebedouro.objects.all():
-        resultado = _ultimo_resultado_valido(bebedouro)
+        resultado = _ultimo_resultado_valido(bebedouro, apenas_publicadas=apenas_publicadas)
         situacoes.append(
             {
                 "bebedouro": bebedouro,

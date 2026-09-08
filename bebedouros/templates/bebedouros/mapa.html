@@ -1,0 +1,31 @@
+{% extends "bebedouros/base.html" %}
+{% load static %}
+{% load l10n %}
+{% block titulo %}Mapa do Campus — Monitoramento da Água — IFRN-CNAT{% endblock %}
+{% block conteudo %}
+  <h1>Mapa do Campus</h1>
+  <p class="mapa-instrucao">Passe o mouse em cima de um ponto para ver qual bebedouro é. Clique para ver os detalhes.</p>
+  <div class="mapa-wrap">
+    <img
+      src="{% static 'bebedouros/img/mapa-campus.png' %}"
+      alt="Mapa de satélite do campus do IFRN-CNAT com a localização dos bebedouros"
+      class="mapa-imagem"
+    >
+    {% localize off %}
+      {% for ponto in pontos %}
+        <a
+          class="mapa-ponto"
+          style="left: {{ ponto.x }}%; top: {{ ponto.y }}%;"
+          href="{% url 'bebedouro_detalhe' ponto.bebedouro.pk %}"
+          title="{{ ponto.bebedouro.codigo }} — {{ ponto.bebedouro.local }}"
+        >
+          {% if ponto.resultado and ponto.resultado.iqab_status == "calculado" %}
+            <span class="gota gota-md gota-{{ ponto.resultado.iqab_faixa_slug }}"></span>
+          {% else %}
+            <span class="gota gota-md gota-vazia"></span>
+          {% endif %}
+        </a>
+      {% endfor %}
+    {% endlocalize %}
+  </div>
+{% endblock %}

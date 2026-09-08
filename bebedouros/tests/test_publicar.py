@@ -85,5 +85,5 @@ class PublicarTests(TestCase):
         self.assertIsNotNone(self.coleta.publicada_em)
 
     def test_rascunho_nao_tem_data_de_publicacao(self):
-        response = self.client.get("/")
+        response = self.client.get("/coletas/")
         self.assertNotContains(response, "Publicado em")

@@ -21,7 +21,7 @@ class ApagarTests(TestCase):
 
     def test_post_deletes_collection_and_its_results_only(self):
         response = self.client.post(f"/coletas/{self.alvo.pk}/apagar/", follow=True)
-        self.assertRedirects(response, "/")
+        self.assertRedirects(response, "/coletas/")
         self.assertFalse(Coleta.objects.filter(pk=self.alvo.pk).exists())
         self.assertEqual(Resultado.objects.count(), 0)
         self.assertTrue(Coleta.objects.filter(pk=self.outra.pk).exists())
