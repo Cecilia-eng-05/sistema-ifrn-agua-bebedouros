@@ -8,6 +8,7 @@ from bebedouros.services import (
     alertas_internos,
     linhas_faltantes,
     recalcular_coleta,
+    situacao_atual_bebedouro,
     situacao_atual_bebedouros,
 )
 
@@ -137,3 +138,48 @@ class AlertasInternosTests(TestCase):
         recalcular_coleta(self.coleta)
         alertas = alertas_internos(situacao_atual_bebedouros())
         self.assertEqual(alertas["quinzena_sem_dados"], [b3.codigo])
+
+
+class SituacaoAtualBebedouroTests(TestCase):
+    def setUp(self):
+        self.b1 = Bebedouro.objects.create(numero=1)
+
+    def test_sem_nenhuma_coleta(self):
+        situacao = situacao_atual_bebedouro(self.b1)
+        self.assertEqual(situacao["bebedouro"], self.b1)
+        self.assertIsNone(situacao["resultado"])
+        self.assertIsNone(situacao["data"])
+
+    def test_pega_o_mais_recente(self):
+        antiga = Coleta.objects.create(data=datetime.date(2026, 8, 1))
+        recente = Coleta.objects.create(data=datetime.date(2026, 9, 1))
+        Resultado.objects.create(coleta=antiga, bebedouro=self.b1, ph=Decimal("7.0"))
+        r_recente = Resultado.objects.create(coleta=recente, bebedouro=self.b1, ph=Decimal("7.5"))
+        situacao = situacao_atual_bebedouro(self.b1)
+        self.assertEqual(situacao["resultado"], r_recente)
+
+    def test_apenas_publicadas_ignora_rascunho(self):
+        rascunho = Coleta.objects.create(data=datetime.date(2026, 9, 1))
+        Resultado.objects.create(coleta=rascunho, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        situacao = situacao_atual_bebedouro(self.b1, apenas_publicadas=True)
+        self.assertIsNone(situacao["resultado"])
+
+    def test_apenas_publicadas_usa_a_publicada(self):
+        publicada = Coleta.objects.create(
+            data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO
+        )
+        r = Resultado.objects.create(coleta=publicada, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        situacao = situacao_atual_bebedouro(self.b1, apenas_publicadas=True)
+        self.assertEqual(situacao["resultado"], r)
+
+    def test_apenas_publicadas_pula_rascunho_mais_recente(self):
+        publicada = Coleta.objects.create(
+            data=datetime.date(2026, 8, 1), status=Coleta.PUBLICADO
+        )
+        rascunho = Coleta.objects.create(data=datetime.date(2026, 9, 1))
+        r_publicada = Resultado.objects.create(
+            coleta=publicada, bebedouro=self.b1, **RESULTADO_COMPLETO
+        )
+        Resultado.objects.create(coleta=rascunho, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        situacao = situacao_atual_bebedouro(self.b1, apenas_publicadas=True)
+        self.assertEqual(situacao["resultado"], r_publicada)

@@ -45,14 +45,18 @@ def publicar_coleta(coleta):
     coleta.save(update_fields=["status", "publicada_em", "atualizada_em"])
 
 
-def _ultimo_resultado_valido(bebedouro):
+def _ultimo_resultado_valido(bebedouro, apenas_publicadas=False):
     """O Resultado mais recente deste bebedouro que tem algum dado de
-    verdade — pula linhas vazias e linhas marcadas 'fora de operação'."""
+    verdade — pula linhas vazias e linhas marcadas 'fora de operação'.
+    Com apenas_publicadas=True, considera só coletas já publicadas (usado
+    pela página pública do bebedouro — DEFINICAO-DO-PROJETO.md §7)."""
     resultados = (
         Resultado.objects.filter(bebedouro=bebedouro)
         .select_related("coleta")
         .order_by("-coleta__data")
     )
+    if apenas_publicadas:
+        resultados = resultados.filter(coleta__status=Coleta.PUBLICADO)
     for resultado in resultados:
         if not resultado.fora_de_operacao and not resultado.esta_vazio():
             return resultado
@@ -78,6 +82,18 @@ def situacao_atual_bebedouros():
             }
         )
     return situacoes
+
+
+def situacao_atual_bebedouro(bebedouro, apenas_publicadas=False):
+    """Situação mais recente de UM bebedouro — mesmo formato de item de
+    situacao_atual_bebedouros(), usado pela página do bebedouro (pública e
+    interna). apenas_publicadas=True restringe às coletas já publicadas."""
+    resultado = _ultimo_resultado_valido(bebedouro, apenas_publicadas=apenas_publicadas)
+    return {
+        "bebedouro": bebedouro,
+        "resultado": resultado,
+        "data": resultado.coleta.data if resultado else None,
+    }
 
 
 def alertas_internos(situacoes):
