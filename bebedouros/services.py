@@ -1,3 +1,5 @@
+import datetime
+
 from django.utils import timezone
 
 from . import iqab
@@ -121,3 +123,54 @@ def alertas_internos(situacoes):
         "filtro_vencido": filtro_vencido,
         "quinzena_sem_dados": quinzena_sem_dados,
     }
+
+
+CAMPO_SERIE = {
+    "cloro": "cloro",
+    "condutividade": "condutividade",
+    "nitrato": "nitrato",
+    "turbidez": "turbidez_valor",
+    "ph": "ph",
+}
+
+SERIES_LABELS = {
+    "iqab": "IQA-B",
+    "cloro": "Cloro",
+    "condutividade": "Condutividade",
+    "nitrato": "Nitrato",
+    "turbidez": "Turbidez",
+    "ph": "pH",
+}
+
+JANELA_DIAS = {"6m": 182, "12m": 365}
+JANELAS_LABELS = {"6m": "6 meses", "12m": "12 meses", "tudo": "Tudo"}
+
+
+def serie_historica(bebedouro, serie, janela, apenas_publicadas=False):
+    """Pontos da série 'serie' ('iqab' ou uma chave de CAMPO_SERIE) deste
+    bebedouro, para o gráfico de evolução. 'janela' é uma chave de
+    JANELA_DIAS ou 'tudo'. Retorna uma lista, em ordem cronológica, de
+    {"data": date, "valor": Decimal ou None} — valor None marca um
+    intervalo sem dado (o gráfico não deve emendar uma linha por cima
+    desse ponto)."""
+    resultados = (
+        Resultado.objects.filter(bebedouro=bebedouro, fora_de_operacao=False)
+        .select_related("coleta")
+        .order_by("coleta__data")
+    )
+    if apenas_publicadas:
+        resultados = resultados.filter(coleta__status=Coleta.PUBLICADO)
+    if janela in JANELA_DIAS:
+        limite = datetime.date.today() - datetime.timedelta(days=JANELA_DIAS[janela])
+        resultados = resultados.filter(coleta__data__gte=limite)
+
+    pontos = []
+    for resultado in resultados:
+        if resultado.esta_vazio():
+            continue
+        if serie == "iqab":
+            valor = resultado.iqab if resultado.iqab_status == iqab.CALCULADO else None
+        else:
+            valor = getattr(resultado, CAMPO_SERIE[serie])
+        pontos.append({"data": resultado.coleta.data, "valor": valor})
+    return pontos
