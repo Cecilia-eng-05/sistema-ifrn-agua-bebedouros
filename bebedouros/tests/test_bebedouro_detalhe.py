@@ -201,7 +201,7 @@ class BebedouroDetalheTests(TestCase):
 
     def test_sem_quinzenas_anteriores_mostra_mensagem(self):
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertContains(response, "Nenhuma quinzena anterior nos últimos 12 meses.")
+        self.assertContains(response, "Nenhuma coleta anterior nos últimos 12 meses.")
 
     def test_quinzena_anterior_aparece_fechada_so_com_a_data(self):
         atual = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)

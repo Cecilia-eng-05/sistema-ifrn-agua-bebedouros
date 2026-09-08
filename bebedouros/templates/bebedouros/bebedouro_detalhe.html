@@ -110,7 +110,7 @@
   </section>
 
   <section class="quinzenas-anteriores">
-    <h2>Quinzenas anteriores</h2>
+    <h2>Coletas anteriores</h2>
     {% if historico %}
       {% for resultado in historico %}
         <details class="historico-item">
@@ -140,7 +140,7 @@
         </details>
       {% endfor %}
     {% else %}
-      <p class="historico-vazio">Nenhuma quinzena anterior nos últimos 12 meses.</p>
+      <p class="historico-vazio">Nenhuma coleta anterior nos últimos 12 meses.</p>
     {% endif %}
   </section>
 {% endblock %}
