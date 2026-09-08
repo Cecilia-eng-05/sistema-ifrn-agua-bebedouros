@@ -11,7 +11,7 @@
       {% if alertas.iqab_ruim %}
         <span class="chips">
           {% for s in alertas.iqab_ruim %}
-            <span class="chip chip-{{ s.resultado.iqab_faixa_slug }}">{{ s.bebedouro.codigo }}</span>
+            <a class="chip chip-{{ s.resultado.iqab_faixa_slug }}" href="{% url 'bebedouro_detalhe' s.bebedouro.pk %}">{{ s.bebedouro.codigo }}</a>
           {% endfor %}
         </span>
       {% else %}
@@ -24,7 +24,7 @@
       {% if alertas.filtro_vencido %}
         <span class="chips">
           {% for s in alertas.filtro_vencido %}
-            <span class="chip chip-vencido">{{ s.bebedouro.codigo }}</span>
+            <a class="chip chip-vencido" href="{% url 'bebedouro_detalhe' s.bebedouro.pk %}">{{ s.bebedouro.codigo }}</a>
           {% endfor %}
         </span>
       {% else %}
@@ -61,7 +61,7 @@
               <span class="gota gota-sm gota-vazia"></span>
             {% endif %}
           </td>
-          <td class="cod">{{ s.bebedouro.codigo }}</td>
+          <td class="cod"><a href="{% url 'bebedouro_detalhe' s.bebedouro.pk %}">{{ s.bebedouro.codigo }}</a></td>
           <td>{{ s.bebedouro.local }}</td>
           <td>{{ s.resultado.iqab_texto|default:"—" }}</td>
           <td>{{ s.data|date:"d/m/Y"|default:"—" }}</td>

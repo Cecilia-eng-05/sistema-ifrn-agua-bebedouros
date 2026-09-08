@@ -92,3 +92,18 @@ class InicioTests(TestCase):
     def test_menu_tem_link_para_inicio(self):
         response = self.client.get("/inicio/")
         self.assertContains(response, 'href="/inicio/"')
+
+    def test_tabela_liga_para_pagina_do_bebedouro(self):
+        b1 = Bebedouro.objects.create(numero=1)
+        response = self.client.get("/inicio/")
+        self.assertContains(response, f'href="/bebedouros/{b1.pk}/"')
+
+    def test_chip_de_filtro_vencido_liga_para_pagina_do_bebedouro(self):
+        b1 = Bebedouro.objects.create(numero=1)
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1))
+        dados = {**RESULTADO_COMPLETO, "filtro": Resultado.FILTRO_VENCIDO}
+        Resultado.objects.create(coleta=coleta, bebedouro=b1, **dados)
+        recalcular_coleta(coleta)
+        response = self.client.get("/inicio/")
+        # Uma vez na linha da tabela, outra vez no chip do alerta.
+        self.assertContains(response, f'href="/bebedouros/{b1.pk}/"', count=2)
