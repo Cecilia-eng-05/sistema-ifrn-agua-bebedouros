@@ -14,7 +14,8 @@
     <div class="cabecalho-info">
       <h1>{{ bebedouro.codigo }} — {{ bebedouro.local }}</h1>
       {% if situacao.resultado.iqab_status == "calculado" %}
-        <p class="cabecalho-status">{{ situacao.resultado.iqab_classificacao }} · última análise em {{ situacao.data|date:"d/m/Y" }}</p>
+        <p class="cabecalho-classificacao">{{ situacao.resultado.iqab_classificacao }}</p>
+        <p class="cabecalho-status">última análise em {{ situacao.data|date:"d/m/Y" }}</p>
       {% else %}
         <p class="cabecalho-status">Ainda não há um IQA-B calculado para este bebedouro.</p>
       {% endif %}
@@ -27,7 +28,7 @@
 
   {% if user.is_authenticated %}
     <section class="cartoes-indice">
-      <h2>De onde vem a nota</h2>
+      <h2>Composição da nota:</h2>
       <div class="cartoes-indice-grid">
         <div class="cartao-indice">
           <span class="cartao-indice-nome">Físico-química da água</span>
@@ -52,7 +53,7 @@
   {% endif %}
 
   <section class="parametros">
-    <h2>O que é monitorado nesta água</h2>
+    <h2>O que é monitorado:</h2>
     <div class="painel">
       <table>
         <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>

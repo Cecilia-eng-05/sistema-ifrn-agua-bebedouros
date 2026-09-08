@@ -90,7 +90,7 @@ class BebedouroDetalheTests(TestCase):
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertNotContains(response, "De onde vem a nota")
+        self.assertNotContains(response, "Composição da nota")
 
     def test_interno_mostra_cartoes_com_pesos_e_notas(self):
         User.objects.create_user("nucleo", password="segredo")
@@ -99,7 +99,7 @@ class BebedouroDetalheTests(TestCase):
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertContains(response, "De onde vem a nota")
+        self.assertContains(response, "Composição da nota")
         self.assertContains(response, "peso 30%")
         self.assertContains(response, "peso 50%")
         self.assertContains(response, "peso 20%")
@@ -130,7 +130,7 @@ class BebedouroDetalheTests(TestCase):
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertContains(response, "O que é monitorado nesta água")
+        self.assertContains(response, "O que é monitorado:")
         self.assertContains(response, "Cloro Residual Livre")
         self.assertContains(response, "Ausente")
 
