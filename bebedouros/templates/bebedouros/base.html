@@ -48,6 +48,26 @@
     .topo nav a:hover, .topo .sair-btn:hover { color: #fff; text-decoration: underline; }
     .onda { display: block; width: 100%; height: 34px; }
 
+    /* Cabeçalho das telas públicas — abas, no lugar da barra do topo */
+    .abas-publicas {
+      display: flex; gap: 4px; max-width: 1320px; margin: 0 auto;
+      padding: 16px 20px 0; border-bottom: 1px solid var(--borda);
+    }
+    .aba {
+      display: inline-block; padding: 9px 20px; border-radius: 10px 10px 0 0;
+      background: var(--clara); color: var(--profunda-2); text-decoration: none;
+      font-size: 14px; font-weight: 600;
+      border: 1px solid var(--borda); border-bottom: none;
+    }
+    .aba:hover { background: #eef7fa; }
+    .aba-ativa {
+      background: var(--fundo); color: var(--profunda); font-weight: 700;
+      margin-bottom: -1px; border-bottom: 1px solid var(--fundo);
+    }
+    .rodape-publico { text-align: center; padding: 10px 20px 34px; }
+    .rodape-publico a { color: var(--tinta-suave); font-size: 12px; text-decoration: none; }
+    .rodape-publico a:hover { text-decoration: underline; }
+
     main { max-width: 1320px; margin: 0 auto; padding: 26px 20px 60px; }
     h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 6px; }
     .voltar { display: inline-block; margin: 0 0 18px; font-size: 14px; }
@@ -261,11 +281,11 @@
   </style>
 </head>
 <body>
-  <header class="topo">
-    <div class="topo-inner">
-      <span class="topo-nome">Sistema de Monitoramento e Gestão da Água no IFRN&nbsp;&ndash;&nbsp;CNAT</span>
-      <nav>
-        {% if user.is_authenticated %}
+  {% if user.is_authenticated %}
+    <header class="topo">
+      <div class="topo-inner">
+        <span class="topo-nome">Sistema de Monitoramento e Gestão da Água no IFRN&nbsp;&ndash;&nbsp;CNAT</span>
+        <nav>
           <a href="{% url 'inicio' %}">Início</a>
           <a href="{% url 'coleta_list' %}">Coletas</a>
           <a href="/admin/bebedouros/bebedouro/">Bebedouros</a>
@@ -273,22 +293,28 @@
             {% csrf_token %}
             <button type="submit" class="sair-btn">Sair</button>
           </form>
-        {% else %}
-          <a href="{% url 'mapa' %}">Mapa</a>
-          <a href="{% url 'login' %}">Entrar</a>
-        {% endif %}
-      </nav>
-    </div>
-    <svg class="onda" viewBox="0 0 1440 34" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M0 20 C 240 2, 480 2, 720 18 S 1200 34, 1440 16 L1440 34 L0 34 Z" fill="#0c5f83"/>
-      <path d="M0 26 C 240 12, 480 12, 720 24 S 1200 38, 1440 24 L1440 34 L0 34 Z" fill="#eef4f7"/>
-    </svg>
-  </header>
+        </nav>
+      </div>
+      <svg class="onda" viewBox="0 0 1440 34" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 20 C 240 2, 480 2, 720 18 S 1200 34, 1440 16 L1440 34 L0 34 Z" fill="#0c5f83"/>
+        <path d="M0 26 C 240 12, 480 12, 720 24 S 1200 38, 1440 24 L1440 34 L0 34 Z" fill="#eef4f7"/>
+      </svg>
+    </header>
+  {% else %}
+    <nav class="abas-publicas">
+      <a href="{% url 'mapa' %}" class="aba{% if request.resolver_match.url_name == 'mapa' %} aba-ativa{% endif %}">Mapa</a>
+    </nav>
+  {% endif %}
   <main>
     {% for message in messages %}
       <div class="msg {{ message.tags }}">{{ message }}</div>
     {% endfor %}
     {% block conteudo %}{% endblock %}
   </main>
+  {% if not user.is_authenticated %}
+    <footer class="rodape-publico">
+      <a href="{% url 'login' %}">Entrar</a>
+    </footer>
+  {% endif %}
 </body>
 </html>

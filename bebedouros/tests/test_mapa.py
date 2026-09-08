@@ -65,3 +65,12 @@ class MapaTests(TestCase):
         self.assertContains(response, ">Entrar<")
         self.assertNotContains(response, ">Coletas<")
         self.assertNotContains(response, ">Sair<")
+
+    def test_aba_mapa_aparece_marcada_como_ativa(self):
+        response = self.client.get("/")
+        self.assertContains(response, 'class="aba aba-ativa"')
+
+    def test_entrar_fica_no_rodape_nao_nas_abas(self):
+        response = self.client.get("/")
+        self.assertContains(response, '<footer class="rodape-publico">')
+        self.assertContains(response, '<a href="/entrar/">Entrar</a>')
