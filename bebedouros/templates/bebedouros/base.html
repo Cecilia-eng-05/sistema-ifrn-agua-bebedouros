@@ -233,9 +233,21 @@
     }
     .mapa-ponto {
       position: absolute; transform: translate(-50%, -50%);
-      display: block; text-decoration: none;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none;
     }
-    .gota-md { width: 20px; height: 20px; }
+    .gota-md {
+      width: 22px; height: 22px;
+      box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(10, 30, 40, 0.5);
+      transition: transform 0.12s ease;
+    }
+    .mapa-ponto:hover .gota-md { transform: rotate(135deg) scale(1.25); }
+    .mapa-ponto-rotulo {
+      background: rgba(255, 255, 255, 0.94); color: var(--profunda);
+      font-size: 11px; font-weight: 700; line-height: 1;
+      padding: 3px 6px; border-radius: 999px; white-space: nowrap;
+      box-shadow: 0 1px 3px rgba(10, 30, 40, 0.3);
+    }
     @media (max-width: 620px) { main { padding: 18px 14px 48px; } h1 { font-size: 20px; } }
   </style>
 </head>

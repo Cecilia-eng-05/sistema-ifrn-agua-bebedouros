@@ -11,7 +11,7 @@
       </svg>
     </div>
     <div class="gota-grande-wrap">
-      {% if situacao.resultado.iqab_status == "calculado" %}
+      {% if not ultimo.fora_de_operacao and situacao.resultado.iqab_status == "calculado" %}
         <span class="gota gota-lg gota-{{ situacao.resultado.iqab_faixa_slug }}"></span>
         <span class="gota-numero-grande">{{ situacao.resultado.iqab }}</span>
       {% else %}
@@ -20,7 +20,13 @@
     </div>
     <div class="cabecalho-info">
       <h1>{{ bebedouro.codigo }} — {{ bebedouro.local }}</h1>
-      {% if situacao.resultado.iqab_status == "calculado" %}
+      {% if ultimo.fora_de_operacao %}
+        <p class="cabecalho-classificacao">Fora de operação</p>
+        <p class="cabecalho-status">
+          desde {{ ultimo.coleta.data|date:"d/m/Y" }}
+          {% if ultimo.observacao %} — {{ ultimo.observacao }}{% endif %}
+        </p>
+      {% elif situacao.resultado.iqab_status == "calculado" %}
         <p class="cabecalho-classificacao">{{ situacao.resultado.iqab_classificacao }}</p>
         <p class="cabecalho-status">última análise em {{ situacao.data|date:"d/m/Y" }}</p>
       {% else %}

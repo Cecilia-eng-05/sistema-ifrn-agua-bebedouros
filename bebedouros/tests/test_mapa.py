@@ -32,6 +32,11 @@ class MapaTests(TestCase):
         response = self.client.get("/")
         self.assertContains(response, 'title="B1 — Mesas verdes"')
 
+    def test_ponto_mostra_o_codigo_visivel_junto_da_gota(self):
+        Bebedouro.objects.create(numero=1)
+        response = self.client.get("/")
+        self.assertContains(response, '<span class="mapa-ponto-rotulo">B1</span>')
+
     def test_sem_resultado_mostra_gota_vazia(self):
         Bebedouro.objects.create(numero=1)
         response = self.client.get("/")

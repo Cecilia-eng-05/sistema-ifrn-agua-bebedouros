@@ -65,6 +65,22 @@ def _ultimo_resultado_valido(bebedouro, apenas_publicadas=False):
     return None
 
 
+def ultimo_resultado(bebedouro, apenas_publicadas=False):
+    """O Resultado da coleta mais recente deste bebedouro, sem pular
+    linha vazia ou fora de operação (ao contrário de
+    _ultimo_resultado_valido). Usado pela página do bebedouro para saber
+    se o motivo de não haver um IQA-B atual é o bebedouro estar
+    atualmente fora de operação, e mostrar isso em destaque."""
+    resultados = (
+        Resultado.objects.filter(bebedouro=bebedouro)
+        .select_related("coleta")
+        .order_by("-coleta__data")
+    )
+    if apenas_publicadas:
+        resultados = resultados.filter(coleta__status=Coleta.PUBLICADO)
+    return resultados.first()
+
+
 def situacao_atual_bebedouros(apenas_publicadas=False):
     """Situação mais recente de cada bebedouro, para a tela Início e para
     o mapa público.

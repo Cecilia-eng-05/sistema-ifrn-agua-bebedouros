@@ -36,6 +36,45 @@ class BebedouroDetalheTests(TestCase):
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, 'class="gota gota-lg gota-vazia"')
 
+    def test_fora_de_operacao_mostra_aviso_e_observacao(self):
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
+        Resultado.objects.create(
+            coleta=coleta,
+            bebedouro=self.b1,
+            fora_de_operacao=True,
+            observacao="Bebedouro quebrado, aguardando manutenção.",
+        )
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "Fora de operação")
+        self.assertContains(response, "Bebedouro quebrado, aguardando manutenção.")
+        self.assertContains(response, "01/09/2026")
+
+    def test_fora_de_operacao_mais_recente_sobrepoe_iqab_antigo(self):
+        # Se o bebedouro tinha um IQA-B válido antes de sair de operação,
+        # a página não deve mostrar essa nota antiga como se fosse a
+        # situação atual — o aviso de fora de operação tem prioridade.
+        antiga = Coleta.objects.create(data=datetime.date(2026, 8, 1), status=Coleta.PUBLICADO)
+        recente = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
+        Resultado.objects.create(coleta=antiga, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=recente, bebedouro=self.b1, fora_de_operacao=True)
+        recalcular_coleta(antiga)
+        recalcular_coleta(recente)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "Fora de operação")
+        self.assertNotContains(response, "Excelente")
+
+    def test_fora_de_operacao_sem_observacao_nao_quebra(self):
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
+        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, fora_de_operacao=True)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "Fora de operação")
+
+    def test_rascunho_fora_de_operacao_nao_aparece_para_visitante(self):
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.RASCUNHO)
+        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, fora_de_operacao=True)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertNotContains(response, "Fora de operação")
+
     def test_com_dados_publicados_mostra_gota_colorida(self):
         coleta = Coleta.objects.create(
             data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO
