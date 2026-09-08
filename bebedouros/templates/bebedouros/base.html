@@ -317,7 +317,7 @@
     {% endfor %}
     {% block conteudo %}{% endblock %}
   </main>
-  {% if not user.is_authenticated %}
+  {% if not user.is_authenticated and request.resolver_match.url_name == "mapa" %}
     <footer class="rodape-publico">
       <a href="{% url 'login' %}">Entrar</a>
     </footer>

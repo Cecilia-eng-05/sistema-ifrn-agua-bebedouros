@@ -25,3 +25,8 @@ class AbasPublicasTests(TestCase):
         response = self.client.get("/alertas/")
         self.assertContains(response, 'class="aba aba-ativa"')
         self.assertContains(response, ">Alertas<")
+
+    def test_entrar_so_aparece_no_mapa(self):
+        self.assertContains(self.client.get("/"), ">Entrar<")
+        self.assertNotContains(self.client.get("/entenda-o-iqab/"), ">Entrar<")
+        self.assertNotContains(self.client.get("/alertas/"), ">Entrar<")
