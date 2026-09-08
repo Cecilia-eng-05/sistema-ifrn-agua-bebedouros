@@ -188,7 +188,7 @@ def publicar(request, pk):
         )
     publicar_coleta(coleta)
     messages.success(request, f"{coleta} publicada.")
-    return redirect("coleta_list")
+    return redirect("inicio")
 
 
 @login_required

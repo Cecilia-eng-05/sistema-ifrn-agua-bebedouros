@@ -34,7 +34,7 @@ class PublicarTests(TestCase):
         )
         self.coleta.refresh_from_db()
         self.assertEqual(self.coleta.status, Coleta.PUBLICADO)
-        self.assertRedirects(response, "/")
+        self.assertRedirects(response, "/inicio/")
 
     def test_publish_complete_without_confirmation(self):
         Resultado.objects.create(coleta=self.coleta, bebedouro=self.b1, ph="7.2")
