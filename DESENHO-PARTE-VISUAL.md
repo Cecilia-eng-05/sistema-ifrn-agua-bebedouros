@@ -242,10 +242,14 @@ conteúdo provisório onde ainda faltar material.
 
 ## 10. Próximos passos
 
-Conforme a ordem já registrada no `DESENHO-ENTRADA-E-RESULTADOS.md`
-(seção 11): este desenho da parte visual entra depois que o sistema for
-hospedado e os dados de 2024/2025 forem digitados. Quando chegar a vez,
-o passo seguinte é montar o **plano de implementação** desta parte visual
+Ordem ajustada em 08/09/2026 (ver `DESENHO-ENTRADA-E-RESULTADOS.md`
+seção 11): a parte visual é construída **agora**, rodando local com os
+dados que já existem no sistema — não depende de hospedagem nem dos dados
+de 2024/2025. É o que permite à orientanda ver o sistema funcionando e
+mostrar para a orientadora. Hospedar e digitar o histórico de 2024/2025
+ficam para depois que esta parte estiver praticamente fechada.
+
+O passo seguinte é montar o **plano de implementação** desta parte visual
 (telas, nessa ordem: Início interna → página do bebedouro → mapa público
 → Alertas → Parâmetros), com as decisões de ferramenta específicas
 (biblioteca de gráfico, por exemplo) tratadas nesse momento.

@@ -361,16 +361,27 @@ completo (fórmula definida com a orientadora, recálculo ao salvar,
 classificação, coluna na grade). Roda no computador; ainda **não** foi para
 hospedagem.
 
-**Ordem decidida pela orientanda (02/09/2026, ajustada em 04/09/2026) —
-hospedar só quando tudo estiver pronto, não agora:**
+**Ordem decidida pela orientanda (02/09/2026, ajustada em 04/09/2026, ajustada
+novamente em 08/09/2026) — hospedar só quando a parte visual estiver pronta,
+não agora:**
 
 1. ~~Metodologia do IQA-B~~ e ~~fórmula~~ — **prontas** (`bebedouros/iqab.py`,
    versão "1.0").
-2. **Hospedar** o sistema (escolher o serviço na hora).
-3. **Digitar manualmente** os dados de 2024/2025 direto no sistema já
+2. **Construir a parte pública** (mapa, página do bebedouro, abas Alertas/
+   Parâmetros) e a tela interna Início — ver `DESENHO-PARTE-VISUAL.md`.
+   Roda local, com os dados que já existem no sistema; serve para a
+   orientanda ver funcionando e **mostrar para a orientadora** antes de
+   qualquer custo/esforço de hospedagem.
+3. **Hospedar** o sistema (escolher o serviço na hora), só depois da parte
+   visual estar praticamente fechada.
+4. **Digitar manualmente** os dados de 2024/2025 direto no sistema já
    hospedado — o volume de análises desse período é pequeno, não compensa
    construir um importador de planilhas para usar uma única vez.
-4. Já hospedado, seguir para a **parte pública** (mapa, abas, alertas).
+
+*(Ordens anteriores deste documento diziam "hospedar" antes da parte visual;
+motivo da troca (08/09/2026): a orientanda precisa ver e mostrar a
+orientadora a parte visual, e isso não depende de hospedagem — só de rodar
+localmente.)*
 
 Enquanto isso, a orientanda testa localmente. Publicar continua sendo uma
 tarefa de ~30 min quando a hora chegar (ver `README-DEPLOY.md`).
