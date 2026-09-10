@@ -35,52 +35,111 @@
     </div>
   </div>
 
-  {% if situacao.resultado.filtro == "vencido" %}
-    <div class="msg warning">Filtro fora da validade na última coleta.</div>
-  {% endif %}
-
-  {% if user.is_authenticated %}
-    <section class="cartoes-indice">
-      <h2>Composição da nota:</h2>
-      <div class="cartoes-indice-grid">
-        <div class="cartao-indice">
-          <span class="cartao-indice-nome">Físico-química da água</span>
-          <span class="cartao-indice-peso">peso {{ pesos_iqab.qfq }}%</span>
-          <span class="cartao-indice-nota">{{ situacao.resultado.iqab_qfq|default:"—" }}</span>
-        </div>
-        <div class="cartao-indice">
-          <span class="cartao-indice-nome">Presença de bactérias</span>
-          <span class="cartao-indice-peso">peso {{ pesos_iqab.qm }}%</span>
-          <span class="cartao-indice-nota">{{ situacao.resultado.iqab_qm|default:"—" }}</span>
-        </div>
-        <div class="cartao-indice">
-          <span class="cartao-indice-nome">Situação do filtro</span>
-          <span class="cartao-indice-peso">peso {{ pesos_iqab.co }}%</span>
-          <span class="cartao-indice-nota">{{ situacao.resultado.iqab_co|default:"—" }}</span>
-          {% if situacao.resultado.filtro == "vencido" %}
-            <span class="cartao-indice-motivo">Filtro fora da validade na data da coleta.</span>
-          {% endif %}
-        </div>
+  <section class="cartoes-indice">
+    <h2>Composição da nota:</h2>
+    <div class="cartoes-indice-grid">
+      <div class="cartao-indice">
+        <span class="cartao-indice-nome">Físico-química da água</span>
+        <span class="cartao-indice-peso">peso {{ pesos_iqab.qfq }}%</span>
+        <span class="cartao-indice-nota">{{ situacao.resultado.iqab_qfq|default:"—" }}</span>
       </div>
-    </section>
-  {% endif %}
-
-  <section class="parametros">
-    <h2>O que é monitorado:</h2>
-    <div class="painel">
-      <table>
-        <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
-        <tbody>
-          <tr><td>Cloro Residual Livre</td><td>{{ situacao.resultado.cloro|default:"—" }} mg/L Cl₂</td></tr>
-          <tr><td>Condutividade Elétrica</td><td>{{ situacao.resultado.condutividade|default:"—" }} µS/cm</td></tr>
-          <tr><td>Nitrato</td><td>{{ situacao.resultado.nitrato|default:"—" }} mg/L N</td></tr>
-          <tr><td>Turbidez</td><td>{{ situacao.resultado.turbidez_texto|default:"—" }} UNT</td></tr>
-          <tr><td>pH</td><td>{{ situacao.resultado.ph|default:"—" }}</td></tr>
-          <tr><td>Coliformes Totais</td><td>{{ situacao.resultado.get_coliformes_totais_display|default:"—" }}</td></tr>
-          <tr><td>E. coli</td><td>{{ situacao.resultado.get_ecoli_display|default:"—" }}</td></tr>
-        </tbody>
-      </table>
+      <div class="cartao-indice">
+        <span class="cartao-indice-nome">Presença de bactérias</span>
+        <span class="cartao-indice-peso">peso {{ pesos_iqab.qm }}%</span>
+        <span class="cartao-indice-nota">{{ situacao.resultado.iqab_qm|default:"—" }}</span>
+      </div>
+      <div class="cartao-indice">
+        <span class="cartao-indice-nome">Situação do filtro</span>
+        <span class="cartao-indice-peso">peso {{ pesos_iqab.co }}%</span>
+        <span class="cartao-indice-nota">{{ situacao.resultado.iqab_co|default:"—" }}</span>
+        {% if situacao.resultado.filtro == "vencido" %}
+          <span class="cartao-indice-motivo">Filtro fora da validade na data da coleta.</span>
+        {% endif %}
+      </div>
     </div>
+  </section>
+
+  <section class="manutencao-filtro">
+    <h2>Manutenção do filtro</h2>
+    {% if filtro.status == "sem_registro" %}
+      <p class="filtro-status filtro-sem-registro">Sem registro de troca de filtro.</p>
+    {% elif filtro.status == "ok" %}
+      <p class="filtro-status filtro-ok">
+        <span class="filtro-icone" aria-hidden="true">✅</span>
+        Filtro trocado em {{ filtro.data_troca|date:"d/m/Y" }} — dentro da validade
+        <span class="filtro-detalhe">(válido até {{ filtro.data_vencimento|date:"d/m/Y" }})</span>
+      </p>
+    {% else %}
+      <p class="filtro-status filtro-vencido">
+        <span class="filtro-icone" aria-hidden="true">❌</span>
+        Filtro trocado em {{ filtro.data_troca|date:"d/m/Y" }} — venceu em {{ filtro.data_vencimento|date:"d/m/Y" }}
+        <span class="filtro-detalhe">Há necessidade de troca.</span>
+      </p>
+    {% endif %}
+  </section>
+
+  <section class="coletas-recentes">
+    <h2>Coletas recentes</h2>
+    {% if recentes %}
+      {% for resultado in recentes %}
+        <details{% if forloop.first %} open{% endif %} class="historico-item">
+          <summary>{{ resultado.coleta.data|date:"d/m/Y" }}</summary>
+          <div class="historico-detalhe">
+            {% if resultado.fora_de_operacao %}
+              <p>Fora de operação nesta data.</p>
+            {% else %}
+              <p>IQA-B: {{ resultado.iqab_texto }}</p>
+              {% if resultado.filtro == "vencido" %}
+                <p>Filtro fora da validade.</p>
+              {% endif %}
+              <table>
+                <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
+                <tbody>
+                  <tr><td>Cloro Residual Livre</td><td>{{ resultado.cloro|default:"—" }} mg/L Cl₂</td></tr>
+                  <tr><td>Condutividade Elétrica</td><td>{{ resultado.condutividade|default:"—" }} µS/cm</td></tr>
+                  <tr><td>Nitrato</td><td>{{ resultado.nitrato|default:"—" }} mg/L N</td></tr>
+                  <tr><td>Turbidez</td><td>{{ resultado.turbidez_texto|default:"—" }} UNT</td></tr>
+                  <tr><td>pH</td><td>{{ resultado.ph|default:"—" }}</td></tr>
+                  <tr><td>Coliformes Totais</td><td>{{ resultado.get_coliformes_totais_display|default:"—" }}</td></tr>
+                  <tr><td>E. coli</td><td>{{ resultado.get_ecoli_display|default:"—" }}</td></tr>
+                </tbody>
+              </table>
+            {% endif %}
+          </div>
+        </details>
+      {% endfor %}
+    {% else %}
+      <p class="historico-vazio">Ainda não há coletas registradas para este bebedouro.</p>
+    {% endif %}
+  </section>
+
+  <section class="media-coletas">
+    <h2>Média das coletas recentes ({{ media.quantidade }})</h2>
+    {% if media.quantidade %}
+      <div class="painel">
+        <table>
+          <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
+          <tbody>
+            <tr><td>Cloro Residual Livre</td><td>{{ media.cloro }} mg/L Cl₂</td></tr>
+            <tr><td>Condutividade Elétrica</td><td>{{ media.condutividade }} µS/cm</td></tr>
+            <tr><td>Nitrato</td><td>{{ media.nitrato }} mg/L N</td></tr>
+            <tr><td>Turbidez</td><td>{{ media.turbidez }} UNT</td></tr>
+            <tr><td>pH</td><td>{{ media.ph }}</td></tr>
+            <tr>
+              <td>Coliformes Totais</td>
+              <td{% if media.coliformes_totais_alerta %} class="media-alerta"{% endif %}>{{ media.coliformes_totais }}</td>
+            </tr>
+            <tr>
+              <td>E. coli</td>
+              <td{% if media.ecoli_alerta %} class="media-alerta"{% endif %}>{{ media.ecoli }}</td>
+            </tr>
+            <tr><td>Média do IQA-B</td><td>{{ media.iqab_texto }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="historico-vazio">Sem coletas para calcular a média.</p>
+    {% endif %}
   </section>
 
   <section class="evolucao">
@@ -112,41 +171,6 @@
       {% endlocalize %}
     {% else %}
       <p class="grafico-vazio">Ainda não há dados suficientes para o gráfico.</p>
-    {% endif %}
-  </section>
-
-  <section class="quinzenas-anteriores">
-    <h2>Coletas anteriores</h2>
-    {% if historico %}
-      {% for resultado in historico %}
-        <details class="historico-item">
-          <summary>{{ resultado.coleta.data|date:"d/m/Y" }}</summary>
-          <div class="historico-detalhe">
-            {% if resultado.fora_de_operacao %}
-              <p>Fora de operação nesta data.</p>
-            {% else %}
-              <p>IQA-B: {{ resultado.iqab_texto }}</p>
-              {% if resultado.filtro == "vencido" %}
-                <p>Filtro fora da validade.</p>
-              {% endif %}
-              <table>
-                <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
-                <tbody>
-                  <tr><td>Cloro Residual Livre</td><td>{{ resultado.cloro|default:"—" }} mg/L Cl₂</td></tr>
-                  <tr><td>Condutividade Elétrica</td><td>{{ resultado.condutividade|default:"—" }} µS/cm</td></tr>
-                  <tr><td>Nitrato</td><td>{{ resultado.nitrato|default:"—" }} mg/L N</td></tr>
-                  <tr><td>Turbidez</td><td>{{ resultado.turbidez_texto|default:"—" }} UNT</td></tr>
-                  <tr><td>pH</td><td>{{ resultado.ph|default:"—" }}</td></tr>
-                  <tr><td>Coliformes Totais</td><td>{{ resultado.get_coliformes_totais_display|default:"—" }}</td></tr>
-                  <tr><td>E. coli</td><td>{{ resultado.get_ecoli_display|default:"—" }}</td></tr>
-                </tbody>
-              </table>
-            {% endif %}
-          </div>
-        </details>
-      {% endfor %}
-    {% else %}
-      <p class="historico-vazio">Nenhuma coleta anterior nos últimos 12 meses.</p>
     {% endif %}
   </section>
 {% endblock %}
