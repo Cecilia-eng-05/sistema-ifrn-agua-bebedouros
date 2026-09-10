@@ -348,21 +348,31 @@ class MediaColetasTests(TestCase):
         r1 = self._resultado(1, cloro=Decimal("1.0"))
         r2 = self._resultado(2, cloro=Decimal("2.0"))
         media = media_coletas([r1, r2])
-        self.assertEqual(media["cloro"], "1,5")
+        self.assertEqual(media["cloro"], "1,500")
         self.assertEqual(media["quantidade"], 2)
 
     def test_valor_em_branco_fica_de_fora_da_media(self):
         r1 = self._resultado(1, cloro=Decimal("2.0"))
         r2 = self._resultado(2)  # cloro em branco
         media = media_coletas([r1, r2])
-        self.assertEqual(media["cloro"], "2")
+        self.assertEqual(media["cloro"], "2,000")
 
     def test_fora_de_operacao_fica_de_fora_da_media(self):
         r1 = self._resultado(1, cloro=Decimal("2.0"))
         r2 = self._resultado(2, fora_de_operacao=True)
         media = media_coletas([r1, r2])
-        self.assertEqual(media["cloro"], "2")
+        self.assertEqual(media["cloro"], "2,000")
         self.assertEqual(media["quantidade"], 1)
+
+    def test_media_que_nao_fecha_redondo_e_arredondada_nao_esticada(self):
+        # 1 + 1 + 2 = 4 / 3 = 1,3333... — sem arredondar pra 3 casas isso
+        # viraria uma dízima gigante na tela (bug real, achado na revisão
+        # do plano antes de implementar).
+        r1 = self._resultado(1, cloro=Decimal("1.0"))
+        r2 = self._resultado(2, cloro=Decimal("1.0"))
+        r3 = self._resultado(3, cloro=Decimal("2.0"))
+        media = media_coletas([r1, r2, r3])
+        self.assertEqual(media["cloro"], "1,333")
 
     def test_turbidez_abaixo_do_limite_marca_menor_que(self):
         r1 = self._resultado(1, turbidez_valor=Decimal("0.751"), turbidez_abaixo_limite=True)

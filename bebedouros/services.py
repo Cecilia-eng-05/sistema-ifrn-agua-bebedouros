@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from django.utils import timezone
 from django.utils.formats import number_format
@@ -198,16 +199,17 @@ def coletas_recentes(bebedouro, apenas_publicadas=False, quantidade=5):
     return recentes
 
 
-def _sem_zeros_a_mais(texto):
-    """Remove zeros à direita depois da vírgula decimal de um texto já
-    formatado por number_format (e a vírgula também, se não sobrar
-    nenhuma casa decimal) — os campos de Resultado guardam mais casas
-    decimais do que faz sentido mostrar numa média (ex.: cloro é
-    DecimalField(decimal_places=3), então a média de 1,0 e 2,0 vem do
-    banco como 1,500, não 1,5)."""
-    if "," not in texto:
-        return texto
-    return texto.rstrip("0").rstrip(",")
+# Casas decimais de cada campo — mesma precisão do respectivo
+# DecimalField em Resultado (models.py). Necessário porque uma média
+# raramente fecha exato: sem arredondar pra essa precisão, "1+1+2"/3
+# vira uma dízima gigante em vez de "1,333".
+_CASAS_DECIMAIS = {
+    "cloro": Decimal("0.001"),
+    "condutividade": Decimal("0.001"),
+    "nitrato": Decimal("0.001"),
+    "ph": Decimal("0.01"),
+}
+_CASAS_TURBIDEZ = Decimal("0.001")
 
 
 def media_coletas(resultados):
@@ -222,7 +224,8 @@ def media_coletas(resultados):
         valores = [getattr(r, campo) for r in validos if getattr(r, campo) is not None]
         if not valores:
             return "—"
-        return _sem_zeros_a_mais(number_format(sum(valores) / len(valores)))
+        media = sum(valores) / len(valores)
+        return number_format(media.quantize(_CASAS_DECIMAIS[campo]))
 
     turbidez_valores = []
     turbidez_abaixo = False
@@ -232,9 +235,11 @@ def media_coletas(resultados):
         turbidez_valores.append(r.turbidez_valor)
         if r.turbidez_abaixo_limite:
             turbidez_abaixo = True
-    turbidez_media = (
-        sum(turbidez_valores) / len(turbidez_valores) if turbidez_valores else None
-    )
+    turbidez_media = None
+    if turbidez_valores:
+        turbidez_media = (
+            sum(turbidez_valores) / len(turbidez_valores)
+        ).quantize(_CASAS_TURBIDEZ)
     turbidez_texto = formatar_turbidez(turbidez_media, turbidez_abaixo) or "—"
 
     def texto_micro(campo):
