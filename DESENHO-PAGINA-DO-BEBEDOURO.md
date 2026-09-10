@@ -99,7 +99,9 @@ Ordem dos blocos, de cima para baixo:
   a nota IQA-B do dia e a tabela dos 7 parâmetros (Cloro, Condutividade,
   Nitrato, Turbidez, pH, Coliformes Totais, E. coli) — exatamente o
   conteúdo que hoje aparece em "Coletas anteriores".
-- **Todas começam fechadas**, inclusive a mais recente.
+- **A mais recente começa aberta**; as outras 4 começam fechadas. O
+  visitante pode fechar a mais recente e abrir qualquer outra, à
+  vontade.
 - Coletas em que o bebedouro estava **fora de operação** aparecem na
   lista, marcadas como tal, e ocupam uma das 5 vagas.
 - Se o bebedouro tiver **menos de 5 coletas**, mostra as que existirem.
