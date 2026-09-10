@@ -465,9 +465,13 @@ git commit -m "feat: coletas_recentes() substitui historico_bebedouro()"
   str, "ph": str, "turbidez": str, "coliformes_totais": str,
   "coliformes_totais_alerta": bool, "ecoli": str, "ecoli_alerta": bool,
   "iqab_texto": str}`. Every string value is ready to display as-is
-  (already `"—"` when there's no data). `quantidade` counts only the
-  rows that aren't `fora_de_operacao` (those are excluded from every
-  average).
+  (already `"—"` when there's no data). Each decimal average is
+  quantized to the same number of decimal places as its source
+  `DecimalField` (3 for cloro/condutividade/nitrato/turbidez, 2 for ph)
+  BEFORE formatting — an average rarely divides evenly, and an
+  unquantized `Decimal` division can render as a 20+ digit string.
+  `quantidade` counts only the rows that aren't `fora_de_operacao`
+  (those are excluded from every average).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -494,24 +498,37 @@ class MediaColetasTests(TestCase):
         self.assertEqual(media["iqab_texto"], "—")
 
     def test_media_simples_de_cloro(self):
+        # cloro é DecimalField(decimal_places=3): o valor volta do banco
+        # já com 3 casas ("1.000"), e a média é arredondada pra essa mesma
+        # precisão — daí "1,500", não "1,5".
         r1 = self._resultado(1, cloro=Decimal("1.0"))
         r2 = self._resultado(2, cloro=Decimal("2.0"))
         media = media_coletas([r1, r2])
-        self.assertEqual(media["cloro"], "1,5")
+        self.assertEqual(media["cloro"], "1,500")
         self.assertEqual(media["quantidade"], 2)
 
     def test_valor_em_branco_fica_de_fora_da_media(self):
         r1 = self._resultado(1, cloro=Decimal("2.0"))
         r2 = self._resultado(2)  # cloro em branco
         media = media_coletas([r1, r2])
-        self.assertEqual(media["cloro"], "2")
+        self.assertEqual(media["cloro"], "2,000")
 
     def test_fora_de_operacao_fica_de_fora_da_media(self):
         r1 = self._resultado(1, cloro=Decimal("2.0"))
         r2 = self._resultado(2, fora_de_operacao=True)
         media = media_coletas([r1, r2])
-        self.assertEqual(media["cloro"], "2")
+        self.assertEqual(media["cloro"], "2,000")
         self.assertEqual(media["quantidade"], 1)
+
+    def test_media_que_nao_fecha_redondo_e_arredondada_nao_esticada(self):
+        # 1 + 1 + 2 = 4 / 3 = 1,3333... — sem arredondar pra 3 casas isso
+        # viraria uma dízima gigante na tela (bug real, achado na revisão
+        # do plano antes de implementar).
+        r1 = self._resultado(1, cloro=Decimal("1.0"))
+        r2 = self._resultado(2, cloro=Decimal("1.0"))
+        r3 = self._resultado(3, cloro=Decimal("2.0"))
+        media = media_coletas([r1, r2, r3])
+        self.assertEqual(media["cloro"], "1,333")
 
     def test_turbidez_abaixo_do_limite_marca_menor_que(self):
         r1 = self._resultado(1, turbidez_valor=Decimal("0.751"), turbidez_abaixo_limite=True)
@@ -560,6 +577,8 @@ Expected: FAIL — `ImportError: cannot import name 'media_coletas'`
 Add near the top of `bebedouros/services.py`:
 
 ```python
+from decimal import Decimal
+
 from django.utils.formats import number_format
 
 from . import iqab
@@ -567,11 +586,25 @@ from .models import Bebedouro, Coleta, Resultado, formatar_turbidez
 ```
 
 (replacing the existing `from . import iqab` / `from .models import
-Bebedouro, Coleta, Resultado` lines with these two).
+Bebedouro, Coleta, Resultado` lines with these; `import datetime` at
+the very top of the file stays as-is).
 
 Then add, after `coletas_recentes()`:
 
 ```python
+# Casas decimais de cada campo — mesma precisão do respectivo
+# DecimalField em Resultado (models.py). Necessário porque uma média
+# raramente fecha exato: sem arredondar pra essa precisão, "1+1+2"/3
+# vira uma dízima gigante em vez de "1,333".
+_CASAS_DECIMAIS = {
+    "cloro": Decimal("0.001"),
+    "condutividade": Decimal("0.001"),
+    "nitrato": Decimal("0.001"),
+    "ph": Decimal("0.01"),
+}
+_CASAS_TURBIDEZ = Decimal("0.001")
+
+
 def media_coletas(resultados):
     """Média dos parâmetros de uma lista de Resultado (normalmente a
     saída de coletas_recentes()), para o bloco 'Média das coletas
@@ -584,7 +617,8 @@ def media_coletas(resultados):
         valores = [getattr(r, campo) for r in validos if getattr(r, campo) is not None]
         if not valores:
             return "—"
-        return number_format(sum(valores) / len(valores))
+        media = sum(valores) / len(valores)
+        return number_format(media.quantize(_CASAS_DECIMAIS[campo]))
 
     turbidez_valores = []
     turbidez_abaixo = False
@@ -594,9 +628,11 @@ def media_coletas(resultados):
         turbidez_valores.append(r.turbidez_valor)
         if r.turbidez_abaixo_limite:
             turbidez_abaixo = True
-    turbidez_media = (
-        sum(turbidez_valores) / len(turbidez_valores) if turbidez_valores else None
-    )
+    turbidez_media = None
+    if turbidez_valores:
+        turbidez_media = (
+            sum(turbidez_valores) / len(turbidez_valores)
+        ).quantize(_CASAS_TURBIDEZ)
     turbidez_texto = formatar_turbidez(turbidez_media, turbidez_abaixo) or "—"
 
     def texto_micro(campo):
@@ -1732,7 +1768,7 @@ class BebedouroDetalheTests(TestCase):
         recalcular_coleta(c1)
         recalcular_coleta(c2)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertContains(response, "1,5 mg/L Cl")
+        self.assertContains(response, "1,500 mg/L Cl")
 
     # --- Gráfico (evolução) ---
 
