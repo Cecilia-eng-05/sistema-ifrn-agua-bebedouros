@@ -151,3 +151,29 @@ class Resultado(models.Model):
         if self.observacao:
             return False
         return True
+
+
+class TrocaFiltro(models.Model):
+    """Uma troca de filtro registrada para um bebedouro. Lançada junto
+    com uma coleta (mesma grade), mas independente do valor Resultado.filtro
+    daquela coleta — ver DESENHO-PAGINA-DO-BEBEDOURO.md §7."""
+
+    bebedouro = models.ForeignKey(
+        Bebedouro, on_delete=models.CASCADE, related_name="trocas_filtro"
+    )
+    coleta = models.ForeignKey(
+        Coleta, on_delete=models.CASCADE, related_name="trocas_filtro"
+    )
+    data_troca = models.DateField("Troca realizada em")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["coleta", "bebedouro"],
+                name="uniq_troca_filtro_por_bebedouro_na_coleta",
+            )
+        ]
+        ordering = ["-data_troca"]
+
+    def __str__(self):
+        return f"{self.bebedouro.codigo} — troca em {self.data_troca:%d/%m/%Y}"
