@@ -1,9 +1,10 @@
 import datetime
 
 from django.utils import timezone
+from django.utils.formats import number_format
 
 from . import iqab
-from .models import Bebedouro, Coleta, Resultado
+from .models import Bebedouro, Coleta, Resultado, formatar_turbidez
 
 
 def linhas_faltantes(coleta):
@@ -195,3 +196,84 @@ def coletas_recentes(bebedouro, apenas_publicadas=False, quantidade=5):
         if len(recentes) == quantidade:
             break
     return recentes
+
+
+def _sem_zeros_a_mais(texto):
+    """Remove zeros à direita depois da vírgula decimal de um texto já
+    formatado por number_format (e a vírgula também, se não sobrar
+    nenhuma casa decimal) — os campos de Resultado guardam mais casas
+    decimais do que faz sentido mostrar numa média (ex.: cloro é
+    DecimalField(decimal_places=3), então a média de 1,0 e 2,0 vem do
+    banco como 1,500, não 1,5)."""
+    if "," not in texto:
+        return texto
+    return texto.rstrip("0").rstrip(",")
+
+
+def media_coletas(resultados):
+    """Média dos parâmetros de uma lista de Resultado (normalmente a
+    saída de coletas_recentes()), para o bloco 'Média das coletas
+    recentes' da página do bebedouro. Coletas marcadas fora de operação
+    ficam de fora de toda a conta. Retorna um dict já pronto para
+    exibir — cada valor é uma string ('—' quando não há dado nenhum)."""
+    validos = [r for r in resultados if not r.fora_de_operacao]
+
+    def texto_decimal(campo):
+        valores = [getattr(r, campo) for r in validos if getattr(r, campo) is not None]
+        if not valores:
+            return "—"
+        return _sem_zeros_a_mais(number_format(sum(valores) / len(valores)))
+
+    turbidez_valores = []
+    turbidez_abaixo = False
+    for r in validos:
+        if r.turbidez_valor is None:
+            continue
+        turbidez_valores.append(r.turbidez_valor)
+        if r.turbidez_abaixo_limite:
+            turbidez_abaixo = True
+    turbidez_media = (
+        sum(turbidez_valores) / len(turbidez_valores) if turbidez_valores else None
+    )
+    turbidez_texto = formatar_turbidez(turbidez_media, turbidez_abaixo) or "—"
+
+    def texto_micro(campo):
+        respondidos = [
+            getattr(r, campo)
+            for r in validos
+            if getattr(r, campo) in (Resultado.AUSENTE, Resultado.PRESENTE)
+        ]
+        total = len(respondidos)
+        if total == 0:
+            return "—", False
+        presentes = sum(1 for v in respondidos if v == Resultado.PRESENTE)
+        if presentes > 0:
+            return f"Presente em {presentes} de {total} coletas", True
+        return f"Ausente em {total} de {total} coletas", False
+
+    coliformes_texto, coliformes_alerta = texto_micro("coliformes_totais")
+    ecoli_texto, ecoli_alerta = texto_micro("ecoli")
+
+    notas = [
+        r.iqab for r in validos if r.iqab_status == iqab.CALCULADO and r.iqab is not None
+    ]
+    media_iqab = iqab.media(notas)
+    iqab_texto = (
+        f"{number_format(media_iqab)} · {iqab.classificar(media_iqab)}"
+        if media_iqab is not None
+        else "—"
+    )
+
+    return {
+        "quantidade": len(validos),
+        "cloro": texto_decimal("cloro"),
+        "condutividade": texto_decimal("condutividade"),
+        "nitrato": texto_decimal("nitrato"),
+        "ph": texto_decimal("ph"),
+        "turbidez": turbidez_texto,
+        "coliformes_totais": coliformes_texto,
+        "coliformes_totais_alerta": coliformes_alerta,
+        "ecoli": ecoli_texto,
+        "ecoli_alerta": ecoli_alerta,
+        "iqab_texto": iqab_texto,
+    }

@@ -8,6 +8,7 @@ from bebedouros.services import (
     alertas_internos,
     coletas_recentes,
     linhas_faltantes,
+    media_coletas,
     recalcular_coleta,
     serie_historica,
     situacao_atual_bebedouro,
@@ -323,3 +324,78 @@ class ColetasRecentesTests(TestCase):
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, ph=Decimal("7.0"))
         self.assertEqual(coletas_recentes(self.b1, apenas_publicadas=True), [])
         self.assertEqual(len(coletas_recentes(self.b1, apenas_publicadas=False)), 1)
+
+
+class MediaColetasTests(TestCase):
+    def setUp(self):
+        self.b1 = Bebedouro.objects.create(numero=1)
+
+    def _resultado(self, coleta_num, **campos):
+        coleta = Coleta.objects.create(
+            data=datetime.date(2026, 1, coleta_num), status=Coleta.PUBLICADO
+        )
+        r = Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **campos)
+        recalcular_coleta(coleta)
+        return Resultado.objects.get(pk=r.pk)
+
+    def test_lista_vazia(self):
+        media = media_coletas([])
+        self.assertEqual(media["quantidade"], 0)
+        self.assertEqual(media["cloro"], "—")
+        self.assertEqual(media["iqab_texto"], "—")
+
+    def test_media_simples_de_cloro(self):
+        r1 = self._resultado(1, cloro=Decimal("1.0"))
+        r2 = self._resultado(2, cloro=Decimal("2.0"))
+        media = media_coletas([r1, r2])
+        self.assertEqual(media["cloro"], "1,5")
+        self.assertEqual(media["quantidade"], 2)
+
+    def test_valor_em_branco_fica_de_fora_da_media(self):
+        r1 = self._resultado(1, cloro=Decimal("2.0"))
+        r2 = self._resultado(2)  # cloro em branco
+        media = media_coletas([r1, r2])
+        self.assertEqual(media["cloro"], "2")
+
+    def test_fora_de_operacao_fica_de_fora_da_media(self):
+        r1 = self._resultado(1, cloro=Decimal("2.0"))
+        r2 = self._resultado(2, fora_de_operacao=True)
+        media = media_coletas([r1, r2])
+        self.assertEqual(media["cloro"], "2")
+        self.assertEqual(media["quantidade"], 1)
+
+    def test_turbidez_abaixo_do_limite_marca_menor_que(self):
+        r1 = self._resultado(1, turbidez_valor=Decimal("0.751"), turbidez_abaixo_limite=True)
+        r2 = self._resultado(2, turbidez_valor=Decimal("0.601"))
+        media = media_coletas([r1, r2])
+        self.assertEqual(media["turbidez"], "<0,676")
+
+    def test_coliformes_ausente_em_todas(self):
+        r1 = self._resultado(1, coliformes_totais=Resultado.AUSENTE)
+        r2 = self._resultado(2, coliformes_totais=Resultado.AUSENTE)
+        media = media_coletas([r1, r2])
+        self.assertEqual(media["coliformes_totais"], "Ausente em 2 de 2 coletas")
+        self.assertFalse(media["coliformes_totais_alerta"])
+
+    def test_coliformes_presente_em_uma_ativa_alerta(self):
+        r1 = self._resultado(1, coliformes_totais=Resultado.PRESENTE)
+        r2 = self._resultado(2, coliformes_totais=Resultado.AUSENTE)
+        media = media_coletas([r1, r2])
+        self.assertEqual(media["coliformes_totais"], "Presente em 1 de 2 coletas")
+        self.assertTrue(media["coliformes_totais_alerta"])
+
+    def test_micro_sem_dado_nenhum_mostra_travessao(self):
+        r1 = self._resultado(1, ph=Decimal("7.0"))
+        media = media_coletas([r1])
+        self.assertEqual(media["coliformes_totais"], "—")
+
+    def test_media_do_iqab(self):
+        completo = dict(
+            cloro=Decimal("1.0"), turbidez_valor=Decimal("0.5"), ph=Decimal("7.0"),
+            nitrato=Decimal("5.0"), coliformes_totais=Resultado.AUSENTE,
+            ecoli=Resultado.AUSENTE, filtro=Resultado.FILTRO_DENTRO,
+        )
+        r1 = self._resultado(1, **completo)  # 100 · Excelente
+        r2 = self._resultado(2, ph=Decimal("7.0"))  # incompleto -> fora da média
+        media = media_coletas([r1, r2])
+        self.assertEqual(media["iqab_texto"], "100 · Excelente")
