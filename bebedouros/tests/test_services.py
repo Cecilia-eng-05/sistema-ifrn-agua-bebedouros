@@ -3,16 +3,19 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from bebedouros.models import Bebedouro, Coleta, Resultado
+from bebedouros.models import Bebedouro, Coleta, Resultado, TrocaFiltro
 from bebedouros.services import (
     alertas_internos,
     coletas_recentes,
     linhas_faltantes,
     media_coletas,
     recalcular_coleta,
+    salvar_troca_filtro,
     serie_historica,
     situacao_atual_bebedouro,
     situacao_atual_bebedouros,
+    situacao_filtro,
+    ultima_troca_filtro,
 )
 
 RESULTADO_COMPLETO = dict(
@@ -409,3 +412,89 @@ class MediaColetasTests(TestCase):
         r2 = self._resultado(2, ph=Decimal("7.0"))  # incompleto -> fora da média
         media = media_coletas([r1, r2])
         self.assertEqual(media["iqab_texto"], "100 · Excelente")
+
+
+class SituacaoFiltroTests(TestCase):
+    def setUp(self):
+        self.b1 = Bebedouro.objects.create(numero=1)
+        self.coleta = Coleta.objects.create(
+            data=datetime.date.today(), status=Coleta.PUBLICADO
+        )
+
+    def test_sem_registro(self):
+        situacao = situacao_filtro(self.b1)
+        self.assertEqual(situacao["status"], "sem_registro")
+        self.assertIsNone(situacao["data_troca"])
+
+    def test_troca_recente_esta_ok(self):
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=self.coleta, data_troca=datetime.date.today()
+        )
+        situacao = situacao_filtro(self.b1)
+        self.assertEqual(situacao["status"], "ok")
+        self.assertEqual(situacao["data_troca"], datetime.date.today())
+
+    def test_troca_vencida(self):
+        antiga = datetime.date.today() - datetime.timedelta(days=200)
+        TrocaFiltro.objects.create(bebedouro=self.b1, coleta=self.coleta, data_troca=antiga)
+        situacao = situacao_filtro(self.b1)
+        self.assertEqual(situacao["status"], "vencido")
+        self.assertEqual(situacao["data_vencimento"], antiga + datetime.timedelta(days=182))
+
+    def test_usa_a_troca_mais_recente(self):
+        outra_coleta = Coleta.objects.create(
+            data=datetime.date.today() - datetime.timedelta(days=10), status=Coleta.PUBLICADO
+        )
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=outra_coleta,
+            data_troca=datetime.date.today() - datetime.timedelta(days=10),
+        )
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=self.coleta, data_troca=datetime.date.today()
+        )
+        situacao = situacao_filtro(self.b1)
+        self.assertEqual(situacao["data_troca"], datetime.date.today())
+
+    def test_rascunho_nao_conta_para_visitante(self):
+        # data diferente da de self.coleta (setUp) — Coleta.data é unique=True
+        rascunho = Coleta.objects.create(
+            data=datetime.date.today() - datetime.timedelta(days=1)
+        )  # rascunho
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=rascunho, data_troca=datetime.date.today()
+        )
+        publico = situacao_filtro(self.b1, apenas_publicadas=True)
+        interno = situacao_filtro(self.b1, apenas_publicadas=False)
+        self.assertEqual(publico["status"], "sem_registro")
+        self.assertEqual(interno["status"], "ok")
+
+
+class SalvarTrocaFiltroTests(TestCase):
+    def setUp(self):
+        self.b1 = Bebedouro.objects.create(numero=1)
+        self.coleta = Coleta.objects.create(data=datetime.date.today())
+
+    def test_cria_troca(self):
+        salvar_troca_filtro(self.coleta, self.b1, datetime.date.today())
+        self.assertEqual(TrocaFiltro.objects.count(), 1)
+
+    def test_data_none_nao_cria_nada(self):
+        salvar_troca_filtro(self.coleta, self.b1, None)
+        self.assertEqual(TrocaFiltro.objects.count(), 0)
+
+    def test_atualiza_troca_existente(self):
+        nova_data = datetime.date.today() - datetime.timedelta(days=1)
+        salvar_troca_filtro(self.coleta, self.b1, datetime.date.today())
+        salvar_troca_filtro(self.coleta, self.b1, nova_data)
+        self.assertEqual(TrocaFiltro.objects.count(), 1)
+        self.assertEqual(TrocaFiltro.objects.first().data_troca, nova_data)
+
+    def test_data_none_remove_troca_existente(self):
+        salvar_troca_filtro(self.coleta, self.b1, datetime.date.today())
+        salvar_troca_filtro(self.coleta, self.b1, None)
+        self.assertEqual(TrocaFiltro.objects.count(), 0)
+
+    def test_relancar_mesma_data_nao_duplica(self):
+        salvar_troca_filtro(self.coleta, self.b1, datetime.date.today())
+        salvar_troca_filtro(self.coleta, self.b1, datetime.date.today())
+        self.assertEqual(TrocaFiltro.objects.count(), 1)

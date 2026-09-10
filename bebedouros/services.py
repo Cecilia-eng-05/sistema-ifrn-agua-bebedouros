@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.formats import number_format
 
 from . import iqab
-from .models import Bebedouro, Coleta, Resultado, formatar_turbidez
+from .models import Bebedouro, Coleta, Resultado, TrocaFiltro, formatar_turbidez
 
 
 def linhas_faltantes(coleta):
@@ -282,3 +282,41 @@ def media_coletas(resultados):
         "ecoli_alerta": ecoli_alerta,
         "iqab_texto": iqab_texto,
     }
+
+
+VALIDADE_FILTRO_DIAS = 182  # ~6 meses — mesma aproximação de JANELA_DIAS["6m"]
+
+
+def ultima_troca_filtro(bebedouro, apenas_publicadas=False):
+    """A troca de filtro mais recente registrada para este bebedouro, ou
+    None se nunca houve uma (ou nenhuma visível). apenas_publicadas=True
+    restringe às trocas lançadas em coletas já publicadas."""
+    trocas = TrocaFiltro.objects.filter(bebedouro=bebedouro).select_related("coleta")
+    if apenas_publicadas:
+        trocas = trocas.filter(coleta__status=Coleta.PUBLICADO)
+    return trocas.order_by("-data_troca").first()
+
+
+def situacao_filtro(bebedouro, apenas_publicadas=False):
+    """Situação da manutenção do filtro deste bebedouro, para o bloco
+    'Manutenção do filtro' da página do bebedouro. Retorna
+    {"status": "sem_registro"|"ok"|"vencido", "data_troca": date|None,
+    "data_vencimento": date|None}."""
+    troca = ultima_troca_filtro(bebedouro, apenas_publicadas=apenas_publicadas)
+    if troca is None:
+        return {"status": "sem_registro", "data_troca": None, "data_vencimento": None}
+    vencimento = troca.data_troca + datetime.timedelta(days=VALIDADE_FILTRO_DIAS)
+    status = "ok" if datetime.date.today() <= vencimento else "vencido"
+    return {"status": status, "data_troca": troca.data_troca, "data_vencimento": vencimento}
+
+
+def salvar_troca_filtro(coleta, bebedouro, data_troca):
+    """Cria, atualiza ou remove o registro de troca de filtro lançado
+    nesta coleta para este bebedouro. data_troca=None remove o registro,
+    se houver — é o que a grade envia quando o bolsista apaga a data."""
+    if data_troca is None:
+        TrocaFiltro.objects.filter(coleta=coleta, bebedouro=bebedouro).delete()
+        return
+    TrocaFiltro.objects.update_or_create(
+        coleta=coleta, bebedouro=bebedouro, defaults={"data_troca": data_troca}
+    )
