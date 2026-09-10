@@ -240,7 +240,7 @@ class BebedouroDetalheTests(TestCase):
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertContains(response, "Média das coletas recentes")
+        self.assertContains(response, "Média dos resultados recentes")
         self.assertContains(response, "Média do IQA-B")
         self.assertContains(response, "100 · Excelente")
 

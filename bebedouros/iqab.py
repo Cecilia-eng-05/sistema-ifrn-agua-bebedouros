@@ -183,7 +183,7 @@ def calcular(resultado):
 
 def media(notas):
     """Média de uma lista de notas de IQA-B já calculadas (Decimal), para
-    o bloco 'Média das coletas recentes' da página do bebedouro. Arredonda
+    o bloco 'Média dos resultados recentes' da página do bebedouro. Arredonda
     do mesmo jeito que uma nota individual (corta pra baixo). None se a
     lista estiver vazia."""
     if not notas:
