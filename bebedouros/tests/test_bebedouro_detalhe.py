@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from bebedouros.models import Bebedouro, Coleta, Resultado
+from bebedouros.models import Bebedouro, Coleta, Resultado, TrocaFiltro
 from bebedouros.services import recalcular_coleta
 
 RESULTADO_COMPLETO = dict(
@@ -63,9 +63,6 @@ class BebedouroDetalheTests(TestCase):
         self.assertContains(response, "01/09/2026")
 
     def test_fora_de_operacao_mais_recente_sobrepoe_iqab_antigo(self):
-        # Se o bebedouro tinha um IQA-B válido antes de sair de operação,
-        # a página não deve mostrar essa nota antiga como se fosse a
-        # situação atual — o aviso de fora de operação tem prioridade.
         antiga = Coleta.objects.create(data=datetime.date(2026, 8, 1), status=Coleta.PUBLICADO)
         recente = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
         Resultado.objects.create(coleta=antiga, bebedouro=self.b1, **RESULTADO_COMPLETO)
@@ -74,7 +71,11 @@ class BebedouroDetalheTests(TestCase):
         recalcular_coleta(recente)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, "Fora de operação")
-        self.assertNotContains(response, "Excelente")
+        # "Excelente" pode aparecer legitimamente no histórico de coletas
+        # recentes (a coleta antiga continua lá, com sua própria
+        # classificação) — o que importa é o cabeçalho de status atual,
+        # que deve refletir a coleta mais recente (fora de operação).
+        self.assertNotContains(response, '<p class="cabecalho-classificacao">Excelente</p>')
 
     def test_fora_de_operacao_sem_observacao_nao_quebra(self):
         coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
@@ -89,9 +90,7 @@ class BebedouroDetalheTests(TestCase):
         self.assertNotContains(response, "Fora de operação")
 
     def test_com_dados_publicados_mostra_gota_colorida(self):
-        coleta = Coleta.objects.create(
-            data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO
-        )
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
@@ -116,38 +115,10 @@ class BebedouroDetalheTests(TestCase):
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, 'class="gota gota-lg gota-excelente"')
 
-    def test_filtro_vencido_mostra_aviso(self):
-        coleta = Coleta.objects.create(
-            data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO
-        )
-        dados = {**RESULTADO_COMPLETO, "filtro": Resultado.FILTRO_VENCIDO}
-        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **dados)
-        recalcular_coleta(coleta)
-        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertContains(response, "Filtro fora da validade na última coleta.")
+    # --- Composição da nota agora é pública (correção pedida na conversa) ---
 
-    def test_sem_filtro_vencido_nao_mostra_aviso(self):
-        coleta = Coleta.objects.create(
-            data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO
-        )
-        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        recalcular_coleta(coleta)
-        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertNotContains(response, "Filtro fora da validade na última coleta.")
-
-    def test_publico_nao_mostra_cartoes_internos(self):
-        coleta = Coleta.objects.create(
-            data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO
-        )
-        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        recalcular_coleta(coleta)
-        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertNotContains(response, "Composição da nota")
-
-    def test_interno_mostra_cartoes_com_pesos_e_notas(self):
-        User.objects.create_user("nucleo", password="segredo")
-        self.client.login(username="nucleo", password="segredo")
-        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1))
+    def test_visitante_ve_composicao_da_nota(self):
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
@@ -157,9 +128,7 @@ class BebedouroDetalheTests(TestCase):
         self.assertContains(response, "peso 20%")
 
     def test_motivo_aparece_so_quando_filtro_vencido(self):
-        User.objects.create_user("nucleo", password="segredo")
-        self.client.login(username="nucleo", password="segredo")
-        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1))
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
         dados = {**RESULTADO_COMPLETO, "filtro": Resultado.FILTRO_VENCIDO}
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **dados)
         recalcular_coleta(coleta)
@@ -167,54 +136,132 @@ class BebedouroDetalheTests(TestCase):
         self.assertContains(response, "Filtro fora da validade na data da coleta.")
 
     def test_sem_motivo_quando_filtro_em_dia(self):
-        User.objects.create_user("nucleo", password="segredo")
-        self.client.login(username="nucleo", password="segredo")
-        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1))
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertNotContains(response, "Filtro fora da validade na data da coleta.")
 
-    def test_tabela_de_parametros_mostra_valores_da_ultima_coleta(self):
-        coleta = Coleta.objects.create(
-            data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO
+    # --- Manutenção do filtro ---
+
+    def test_sem_registro_de_troca(self):
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "Sem registro de troca de filtro.")
+
+    def test_troca_recente_mostra_check_verde(self):
+        coleta = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=coleta, data_troca=datetime.date.today()
         )
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "✅")
+        self.assertContains(response, "dentro da validade")
+
+    def test_troca_vencida_mostra_x_vermelho_e_necessidade_de_troca(self):
+        coleta = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
+        antiga = datetime.date.today() - datetime.timedelta(days=200)
+        TrocaFiltro.objects.create(bebedouro=self.b1, coleta=coleta, data_troca=antiga)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "❌")
+        self.assertContains(response, "Há necessidade de troca.")
+
+    def test_troca_em_rascunho_nao_aparece_para_visitante(self):
+        coleta = Coleta.objects.create(data=datetime.date.today())  # rascunho
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=coleta, data_troca=datetime.date.today()
+        )
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "Sem registro de troca de filtro.")
+
+    # --- Coletas recentes ---
+
+    def test_sem_coletas_mostra_mensagem(self):
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "Ainda não há coletas registradas para este bebedouro.")
+
+    def test_mostra_no_maximo_5_coletas(self):
+        for dias in [0, 15, 30, 45, 60, 75, 90]:
+            data = datetime.date.today() - datetime.timedelta(days=dias)
+            coleta = Coleta.objects.create(data=data, status=Coleta.PUBLICADO)
+            Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
+            recalcular_coleta(coleta)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "<summary>", count=5)
+
+    def test_primeira_coleta_aparece_aberta_as_outras_fechadas(self):
+        atual = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
+        anterior = Coleta.objects.create(
+            data=datetime.date.today() - datetime.timedelta(days=15), status=Coleta.PUBLICADO
+        )
+        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(atual)
+        recalcular_coleta(anterior)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "<details", count=2)
+        self.assertContains(response, "<details open", count=1)
+
+    def test_coleta_mostra_parametros_ao_abrir(self):
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertContains(response, "O que é monitorado:")
+        self.assertContains(response, "<summary>01/09/2026</summary>")
         self.assertContains(response, "Cloro Residual Livre")
         self.assertContains(response, "Ausente")
 
     def test_turbidez_abaixo_do_limite_mostra_menor_que(self):
-        coleta = Coleta.objects.create(
-            data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO
-        )
+        coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
         dados = {**RESULTADO_COMPLETO, "turbidez_valor": None, "turbidez_abaixo_limite": True}
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **dados)
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, "&lt;")
 
-    def test_grafico_padrao_e_12_meses_e_iqab(self):
-        coleta = Coleta.objects.create(
-            data=datetime.date.today(), status=Coleta.PUBLICADO
-        )
+    def test_coleta_fora_de_operacao_conta_como_uma_das_5(self):
+        coleta = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
+        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, fora_de_operacao=True)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "<summary>", count=1)
+        self.assertContains(response, "Fora de operação nesta data.")
+
+    # --- Média das coletas recentes ---
+
+    def test_sem_coletas_mostra_mensagem_de_media_vazia(self):
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "Sem coletas para calcular a média.")
+
+    def test_media_aparece_aberta_sem_precisar_clicar(self):
+        coleta = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        # Escopado a 'grafico-ponto' (não '<circle' sozinho) porque o
-        # ícone da foto também usa um <circle> (o "sol" do ícone de
-        # imagem), sem relação com o gráfico.
+        self.assertContains(response, "Média das coletas recentes (1)")
+        self.assertContains(response, "Média do IQA-B")
+        self.assertContains(response, "100 · Excelente")
+
+    def test_media_de_duas_coletas(self):
+        c1 = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
+        c2 = Coleta.objects.create(data=datetime.date(2026, 9, 15), status=Coleta.PUBLICADO)
+        Resultado.objects.create(coleta=c1, bebedouro=self.b1, **{**RESULTADO_COMPLETO, "cloro": Decimal("1.0")})
+        Resultado.objects.create(coleta=c2, bebedouro=self.b1, **{**RESULTADO_COMPLETO, "cloro": Decimal("2.0")})
+        recalcular_coleta(c1)
+        recalcular_coleta(c2)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, "1,500 mg/L Cl")
+
+    # --- Gráfico (evolução) ---
+
+    def test_grafico_padrao_e_12_meses_e_iqab(self):
+        coleta = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
+        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(coleta)
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, 'class="grafico-ponto"', count=1)
         self.assertContains(response, 'class="grafico-faixa faixa-excelente"')
         self.assertContains(response, ">12 meses<")
 
     def test_coordenadas_do_grafico_usam_ponto_decimal(self):
-        # As coordenadas do SVG são números (ex.: y="158.8") — se o Django
-        # aplicar a formatação de número em português (vírgula decimal),
-        # o atributo vira "158,8" e o navegador não consegue mais
-        # entender o desenho.
         import re
 
         coleta = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
@@ -234,12 +281,10 @@ class BebedouroDetalheTests(TestCase):
 
     def test_gap_gera_dois_segmentos_de_linha(self):
         antiga = Coleta.objects.create(
-            data=datetime.date.today() - datetime.timedelta(days=60),
-            status=Coleta.PUBLICADO,
+            data=datetime.date.today() - datetime.timedelta(days=60), status=Coleta.PUBLICADO
         )
         meio = Coleta.objects.create(
-            data=datetime.date.today() - datetime.timedelta(days=30),
-            status=Coleta.PUBLICADO,
+            data=datetime.date.today() - datetime.timedelta(days=30), status=Coleta.PUBLICADO
         )
         recente = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
         Resultado.objects.create(coleta=antiga, bebedouro=self.b1, **RESULTADO_COMPLETO)
@@ -250,59 +295,3 @@ class BebedouroDetalheTests(TestCase):
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, "<polyline", count=2)
         self.assertContains(response, 'class="grafico-ponto"', count=2)
-
-    def test_sem_quinzenas_anteriores_mostra_mensagem(self):
-        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertContains(response, "Nenhuma coleta anterior nos últimos 12 meses.")
-
-    def test_quinzena_anterior_aparece_fechada_so_com_a_data(self):
-        atual = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
-        anterior = Coleta.objects.create(
-            data=datetime.date.today() - datetime.timedelta(days=20),
-            status=Coleta.PUBLICADO,
-        )
-        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        recalcular_coleta(atual)
-        recalcular_coleta(anterior)
-        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        data_formatada = anterior.data.strftime("%d/%m/%Y")
-        self.assertContains(response, f"<summary>{data_formatada}</summary>")
-        self.assertContains(response, "100 · Excelente")
-
-    def test_quinzena_anterior_mostra_os_parametros(self):
-        atual = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
-        anterior = Coleta.objects.create(
-            data=datetime.date.today() - datetime.timedelta(days=20),
-            status=Coleta.PUBLICADO,
-        )
-        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        recalcular_coleta(atual)
-        recalcular_coleta(anterior)
-        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        # Aparece uma vez em "O que é monitorado" (situação atual) e outra
-        # dentro do item expandido da quinzena anterior.
-        self.assertContains(response, "Cloro Residual Livre", count=2)
-        self.assertContains(response, "Coliformes Totais", count=2)
-
-    def test_situacao_atual_nao_aparece_duplicada_no_historico(self):
-        atual = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
-        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        recalcular_coleta(atual)
-        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        data_formatada = atual.data.strftime("%d/%m/%Y")
-        self.assertNotContains(response, f"<summary>{data_formatada}</summary>")
-
-    def test_quinzena_fora_de_operacao_mostra_aviso(self):
-        atual = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
-        anterior = Coleta.objects.create(
-            data=datetime.date.today() - datetime.timedelta(days=20),
-            status=Coleta.PUBLICADO,
-        )
-        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, fora_de_operacao=True)
-        recalcular_coleta(atual)
-        recalcular_coleta(anterior)
-        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertContains(response, "Fora de operação nesta data.")
