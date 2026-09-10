@@ -39,5 +39,9 @@ class ResultadoRowForm(forms.Form):
     coliformes_totais = forms.ChoiceField(required=False, choices=Resultado.MICRO_CHOICES)
     ecoli = forms.ChoiceField(required=False, choices=Resultado.MICRO_CHOICES)
     filtro = forms.ChoiceField(required=False, choices=Resultado.FILTRO_CHOICES)
+    troca_filtro = forms.DateField(
+        required=False,
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+    )
     fora_de_operacao = forms.BooleanField(required=False)
     observacao = forms.CharField(required=False, max_length=200)
