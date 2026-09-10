@@ -220,12 +220,14 @@ class BebedouroDetalheTests(TestCase):
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, "&lt;")
 
-    def test_coleta_fora_de_operacao_conta_como_uma_das_5(self):
+    def test_coleta_fora_de_operacao_nao_aparece_em_coletas_recentes(self):
+        # A situação de fora de operação já aparece no topo da página —
+        # não se repete em "Coletas recentes".
         coleta = Coleta.objects.create(data=datetime.date.today(), status=Coleta.PUBLICADO)
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, fora_de_operacao=True)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertContains(response, "<summary>", count=1)
-        self.assertContains(response, "Fora de operação nesta data.")
+        self.assertContains(response, "<summary>", count=0)
+        self.assertContains(response, "Ainda não há coletas registradas para este bebedouro.")
 
     # --- Média das coletas recentes ---
 

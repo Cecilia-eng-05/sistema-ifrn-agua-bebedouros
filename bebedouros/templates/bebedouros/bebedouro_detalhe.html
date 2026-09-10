@@ -85,26 +85,22 @@
         <details{% if forloop.first %} open{% endif %} class="historico-item">
           <summary>{{ resultado.coleta.data|date:"d/m/Y" }}</summary>
           <div class="historico-detalhe">
-            {% if resultado.fora_de_operacao %}
-              <p>Fora de operação nesta data.</p>
-            {% else %}
-              <p>IQA-B: {{ resultado.iqab_texto }}</p>
-              {% if resultado.filtro == "vencido" %}
-                <p>Filtro fora da validade.</p>
-              {% endif %}
-              <table>
-                <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
-                <tbody>
-                  <tr><td>Cloro Residual Livre</td><td>{{ resultado.cloro|default:"—" }} mg/L Cl₂</td></tr>
-                  <tr><td>Condutividade Elétrica</td><td>{{ resultado.condutividade|default:"—" }} µS/cm</td></tr>
-                  <tr><td>Nitrato</td><td>{{ resultado.nitrato|default:"—" }} mg/L N</td></tr>
-                  <tr><td>Turbidez</td><td>{{ resultado.turbidez_texto|default:"—" }} UNT</td></tr>
-                  <tr><td>pH</td><td>{{ resultado.ph|default:"—" }}</td></tr>
-                  <tr><td>Coliformes Totais</td><td>{{ resultado.get_coliformes_totais_display|default:"—" }}</td></tr>
-                  <tr><td>E. coli</td><td>{{ resultado.get_ecoli_display|default:"—" }}</td></tr>
-                </tbody>
-              </table>
+            <p>IQA-B: {{ resultado.iqab_texto }}</p>
+            {% if resultado.filtro == "vencido" %}
+              <p>Filtro fora da validade.</p>
             {% endif %}
+            <table>
+              <thead><tr><th>Parâmetro</th><th>Valor</th></tr></thead>
+              <tbody>
+                <tr><td>Cloro Residual Livre</td><td>{{ resultado.cloro|default:"—" }} mg/L Cl₂</td></tr>
+                <tr><td>Condutividade Elétrica</td><td>{{ resultado.condutividade|default:"—" }} µS/cm</td></tr>
+                <tr><td>Nitrato</td><td>{{ resultado.nitrato|default:"—" }} mg/L N</td></tr>
+                <tr><td>Turbidez</td><td>{{ resultado.turbidez_texto|default:"—" }} UNT</td></tr>
+                <tr><td>pH</td><td>{{ resultado.ph|default:"—" }}</td></tr>
+                <tr><td>Coliformes Totais</td><td>{{ resultado.get_coliformes_totais_display|default:"—" }}</td></tr>
+                <tr><td>E. coli</td><td>{{ resultado.get_ecoli_display|default:"—" }}</td></tr>
+              </tbody>
+            </table>
           </div>
         </details>
       {% endfor %}

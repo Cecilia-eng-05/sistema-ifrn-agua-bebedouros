@@ -316,11 +316,32 @@ class ColetasRecentesTests(TestCase):
         recentes = coletas_recentes(self.b1)
         self.assertEqual(len(recentes), 1)
 
-    def test_fora_de_operacao_entra_na_lista(self):
+    def test_fora_de_operacao_nao_entra_na_lista(self):
+        # Fora de operação não é um resultado — a situação atual já
+        # aparece no topo da página, então não há por que repetir aqui.
         self._coleta_com_resultado(0, fora_de_operacao=True)
         recentes = coletas_recentes(self.b1)
-        self.assertEqual(len(recentes), 1)
-        self.assertTrue(recentes[0].fora_de_operacao)
+        self.assertEqual(recentes, [])
+
+    def test_fora_de_operacao_com_observacao_tambem_nao_entra(self):
+        # Mesmo com uma observação preenchida (o que faz esta_vazio()
+        # retornar False), uma linha fora de operação continua de fora.
+        self._coleta_com_resultado(0, fora_de_operacao=True, observacao="Quebrado")
+        recentes = coletas_recentes(self.b1)
+        self.assertEqual(recentes, [])
+
+    def test_fora_de_operacao_no_meio_do_historico_e_pulada(self):
+        # As duas mais recentes ficam de fora por estarem fora de
+        # operação; a lista busca mais pra trás até achar 5 com dado.
+        self._coleta_com_resultado(0, fora_de_operacao=True)
+        self._coleta_com_resultado(15, fora_de_operacao=True)
+        for dias in [30, 45, 60, 75, 90]:
+            self._coleta_com_resultado(dias, ph=Decimal("7.0"))
+        recentes = coletas_recentes(self.b1)
+        self.assertEqual(len(recentes), 5)
+        datas = [r.coleta.data for r in recentes]
+        esperado_mais_recente = datetime.date.today() - datetime.timedelta(days=30)
+        self.assertEqual(datas[0], esperado_mais_recente)
 
     def test_apenas_publicadas_ignora_rascunho(self):
         coleta = Coleta.objects.create(data=datetime.date.today())  # rascunho

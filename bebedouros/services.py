@@ -176,11 +176,14 @@ def serie_historica(bebedouro, janela, apenas_publicadas=False):
 
 
 def coletas_recentes(bebedouro, apenas_publicadas=False, quantidade=5):
-    """As `quantidade` coletas mais recentes deste bebedouro — a atual
-    incluída — para o bloco 'Coletas recentes' da página do bebedouro.
-    Mais recente primeiro. Pula linhas totalmente vazias (sem nenhum
-    lançamento), mas mantém as marcadas 'fora de operação'.
-    apenas_publicadas=True restringe às coletas já publicadas."""
+    """As `quantidade` coletas mais recentes deste bebedouro que têm
+    resultado de verdade — a atual incluída — para o bloco 'Coletas
+    recentes' da página do bebedouro. Mais recente primeiro. Pula linhas
+    totalmente vazias E as marcadas 'fora de operação' (essa situação já
+    aparece no topo da página quando é a atual; uma fora de operação no
+    passado simplesmente não entra nesta lista nem na média — não há
+    resultado para mostrar). apenas_publicadas=True restringe às coletas
+    já publicadas."""
     resultados = (
         Resultado.objects.filter(bebedouro=bebedouro)
         .select_related("coleta")
@@ -191,7 +194,7 @@ def coletas_recentes(bebedouro, apenas_publicadas=False, quantidade=5):
 
     recentes = []
     for resultado in resultados:
-        if resultado.esta_vazio() and not resultado.fora_de_operacao:
+        if resultado.esta_vazio() or resultado.fora_de_operacao:
             continue
         recentes.append(resultado)
         if len(recentes) == quantidade:
