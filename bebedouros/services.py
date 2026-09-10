@@ -252,9 +252,10 @@ def media_coletas(resultados):
         if total == 0:
             return "—", False
         presentes = sum(1 for v in respondidos if v == Resultado.PRESENTE)
+        palavra = "coleta" if total == 1 else "coletas"
         if presentes > 0:
-            return f"Presente em {presentes} de {total} coletas", True
-        return f"Ausente em {total} de {total} coletas", False
+            return f"Presente em {presentes} de {total} {palavra}", True
+        return f"Ausente em {total} de {total} {palavra}", False
 
     coliformes_texto, coliformes_alerta = texto_micro("coliformes_totais")
     ecoli_texto, ecoli_alerta = texto_micro("ecoli")

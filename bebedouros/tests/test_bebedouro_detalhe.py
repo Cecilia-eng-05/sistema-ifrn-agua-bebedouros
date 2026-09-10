@@ -105,6 +105,8 @@ class BebedouroDetalheTests(TestCase):
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, 'class="gota gota-lg gota-vazia"')
         self.assertNotContains(response, 'class="gota gota-lg gota-excelente"')
+        self.assertNotContains(response, "<summary>01/09/2026</summary>")
+        self.assertContains(response, "Sem coletas para calcular a média.")
 
     def test_usuario_logado_ve_rascunho(self):
         User.objects.create_user("nucleo", password="segredo")

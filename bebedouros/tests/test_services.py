@@ -397,6 +397,16 @@ class MediaColetasTests(TestCase):
         self.assertEqual(media["coliformes_totais"], "Presente em 1 de 2 coletas")
         self.assertTrue(media["coliformes_totais_alerta"])
 
+    def test_coliformes_singular_quando_total_e_1(self):
+        r1 = self._resultado(1, coliformes_totais=Resultado.AUSENTE)
+        media = media_coletas([r1])
+        self.assertEqual(media["coliformes_totais"], "Ausente em 1 de 1 coleta")
+
+    def test_coliformes_presente_singular_quando_total_e_1(self):
+        r1 = self._resultado(1, coliformes_totais=Resultado.PRESENTE)
+        media = media_coletas([r1])
+        self.assertEqual(media["coliformes_totais"], "Presente em 1 de 1 coleta")
+
     def test_micro_sem_dado_nenhum_mostra_travessao(self):
         r1 = self._resultado(1, ph=Decimal("7.0"))
         media = media_coletas([r1])
