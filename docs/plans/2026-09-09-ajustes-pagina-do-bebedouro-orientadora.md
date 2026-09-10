@@ -759,7 +759,10 @@ class SituacaoFiltroTests(TestCase):
         self.assertEqual(situacao["data_troca"], datetime.date.today())
 
     def test_rascunho_nao_conta_para_visitante(self):
-        rascunho = Coleta.objects.create(data=datetime.date.today())  # rascunho
+        # Coleta.data é unique=True — não pode repetir a data de
+        # setUp()'s self.coleta (hoje), daí ontem.
+        ontem = datetime.date.today() - datetime.timedelta(days=1)
+        rascunho = Coleta.objects.create(data=ontem)  # rascunho
         TrocaFiltro.objects.create(
             bebedouro=self.b1, coleta=rascunho, data_troca=datetime.date.today()
         )
