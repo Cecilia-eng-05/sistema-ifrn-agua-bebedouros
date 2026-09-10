@@ -6,7 +6,7 @@ from django.test import TestCase
 from bebedouros.models import Bebedouro, Coleta, Resultado
 from bebedouros.services import (
     alertas_internos,
-    historico_bebedouro,
+    coletas_recentes,
     linhas_faltantes,
     recalcular_coleta,
     serie_historica,
@@ -278,82 +278,48 @@ class SerieHistoricaTests(TestCase):
         self.assertEqual(pontos, [])
 
 
-class HistoricoBebedouroTests(TestCase):
+class ColetasRecentesTests(TestCase):
     def setUp(self):
         self.b1 = Bebedouro.objects.create(numero=1)
 
-    def _coleta(self, dias_atras, **overrides):
+    def _coleta_com_resultado(self, dias_atras, **campos):
         data = datetime.date.today() - datetime.timedelta(days=dias_atras)
-        coleta = Coleta.objects.create(data=data, **overrides)
+        coleta = Coleta.objects.create(data=data, status=Coleta.PUBLICADO)
+        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **campos)
         return coleta
 
-    def test_nao_inclui_a_situacao_atual(self):
-        coleta = self._coleta(5)
-        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        recalcular_coleta(coleta)
-        historico = historico_bebedouro(self.b1)
-        self.assertEqual(historico, [])
+    def test_sem_coletas_retorna_lista_vazia(self):
+        self.assertEqual(coletas_recentes(self.b1), [])
 
-    def test_inclui_coleta_anterior_a_atual(self):
-        atual = self._coleta(5)
-        anterior = self._coleta(20)
-        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        recalcular_coleta(atual)
-        recalcular_coleta(anterior)
-        historico = historico_bebedouro(self.b1)
-        self.assertEqual(len(historico), 1)
-        self.assertEqual(historico[0].coleta, anterior)
+    def test_traz_no_maximo_5_mais_recentes(self):
+        for dias in [0, 15, 30, 45, 60, 75, 90]:
+            self._coleta_com_resultado(dias, ph=Decimal("7.0"))
+        recentes = coletas_recentes(self.b1)
+        self.assertEqual(len(recentes), 5)
+        datas = [r.coleta.data for r in recentes]
+        self.assertEqual(datas, sorted(datas, reverse=True))
+        self.assertEqual(datas[0], datetime.date.today())
 
-    def test_inclui_linha_fora_de_operacao(self):
-        atual = self._coleta(5)
-        anterior = self._coleta(20)
-        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, fora_de_operacao=True)
-        recalcular_coleta(atual)
-        recalcular_coleta(anterior)
-        historico = historico_bebedouro(self.b1)
-        self.assertEqual(len(historico), 1)
-        self.assertTrue(historico[0].fora_de_operacao)
+    def test_inclui_a_situacao_atual(self):
+        self._coleta_com_resultado(0, ph=Decimal("7.0"))
+        recentes = coletas_recentes(self.b1)
+        self.assertEqual(len(recentes), 1)
+        self.assertEqual(recentes[0].coleta.data, datetime.date.today())
 
-    def test_exclui_linha_totalmente_vazia(self):
-        atual = self._coleta(5)
-        vazia = self._coleta(20)
-        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        Resultado.objects.create(coleta=vazia, bebedouro=self.b1)
-        recalcular_coleta(atual)
-        recalcular_coleta(vazia)
-        historico = historico_bebedouro(self.b1)
-        self.assertEqual(historico, [])
+    def test_pula_linha_vazia_sem_fora_de_operacao(self):
+        self._coleta_com_resultado(0)  # sem nenhum dado
+        self._coleta_com_resultado(15, ph=Decimal("7.0"))
+        recentes = coletas_recentes(self.b1)
+        self.assertEqual(len(recentes), 1)
 
-    def test_exclui_coleta_com_mais_de_12_meses(self):
-        atual = self._coleta(5)
-        antiga = self._coleta(400)
-        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        Resultado.objects.create(coleta=antiga, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        recalcular_coleta(atual)
-        recalcular_coleta(antiga)
-        historico = historico_bebedouro(self.b1)
-        self.assertEqual(historico, [])
-
-    def test_ordem_mais_recente_primeiro(self):
-        atual = self._coleta(5)
-        meio = self._coleta(20)
-        antiga = self._coleta(35)
-        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        Resultado.objects.create(coleta=meio, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        Resultado.objects.create(coleta=antiga, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        for c in (atual, meio, antiga):
-            recalcular_coleta(c)
-        historico = historico_bebedouro(self.b1)
-        self.assertEqual([r.coleta for r in historico], [meio, antiga])
+    def test_fora_de_operacao_entra_na_lista(self):
+        self._coleta_com_resultado(0, fora_de_operacao=True)
+        recentes = coletas_recentes(self.b1)
+        self.assertEqual(len(recentes), 1)
+        self.assertTrue(recentes[0].fora_de_operacao)
 
     def test_apenas_publicadas_ignora_rascunho(self):
-        atual = self._coleta(5, status=Coleta.PUBLICADO)
-        anterior = self._coleta(20, status=Coleta.RASCUNHO)
-        Resultado.objects.create(coleta=atual, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        Resultado.objects.create(coleta=anterior, bebedouro=self.b1, **RESULTADO_COMPLETO)
-        recalcular_coleta(atual)
-        recalcular_coleta(anterior)
-        historico = historico_bebedouro(self.b1, apenas_publicadas=True)
-        self.assertEqual(historico, [])
+        coleta = Coleta.objects.create(data=datetime.date.today())  # rascunho
+        Resultado.objects.create(coleta=coleta, bebedouro=self.b1, ph=Decimal("7.0"))
+        self.assertEqual(coletas_recentes(self.b1, apenas_publicadas=True), [])
+        self.assertEqual(len(coletas_recentes(self.b1, apenas_publicadas=False)), 1)

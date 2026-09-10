@@ -173,12 +173,12 @@ def serie_historica(bebedouro, janela, apenas_publicadas=False):
     return pontos
 
 
-def historico_bebedouro(bebedouro, apenas_publicadas=False):
-    """Coletas anteriores à situação atual deste bebedouro, dos últimos
-    12 meses, para a lista 'Quinzenas anteriores' da página do bebedouro
-    (a situação atual já aparece no topo da página, então não entra
-    aqui). Retorna uma lista de Resultado, mais recente primeiro."""
-    atual = _ultimo_resultado_valido(bebedouro, apenas_publicadas=apenas_publicadas)
+def coletas_recentes(bebedouro, apenas_publicadas=False, quantidade=5):
+    """As `quantidade` coletas mais recentes deste bebedouro — a atual
+    incluída — para o bloco 'Coletas recentes' da página do bebedouro.
+    Mais recente primeiro. Pula linhas totalmente vazias (sem nenhum
+    lançamento), mas mantém as marcadas 'fora de operação'.
+    apenas_publicadas=True restringe às coletas já publicadas."""
     resultados = (
         Resultado.objects.filter(bebedouro=bebedouro)
         .select_related("coleta")
@@ -186,14 +186,12 @@ def historico_bebedouro(bebedouro, apenas_publicadas=False):
     )
     if apenas_publicadas:
         resultados = resultados.filter(coleta__status=Coleta.PUBLICADO)
-    limite = datetime.date.today() - datetime.timedelta(days=JANELA_DIAS["12m"])
-    resultados = resultados.filter(coleta__data__gte=limite)
 
-    historico = []
+    recentes = []
     for resultado in resultados:
-        if atual and resultado.pk == atual.pk:
-            continue
         if resultado.esta_vazio() and not resultado.fora_de_operacao:
             continue
-        historico.append(resultado)
-    return historico
+        recentes.append(resultado)
+        if len(recentes) == quantidade:
+            break
+    return recentes
