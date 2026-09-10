@@ -2,6 +2,20 @@ from django.db import models
 from django.utils.formats import number_format
 
 
+def formatar_turbidez(valor, abaixo_limite):
+    """Texto de exibição da turbidez ('<0,751' quando abaixo do limite de
+    detecção; vazio sem dado nenhum). Compartilhado entre a tabela de uma
+    única coleta (Resultado.turbidez_texto) e a média de várias coletas
+    (services.media_coletas)."""
+    if abaixo_limite and valor is not None:
+        return f"<{number_format(valor)}"
+    if abaixo_limite:
+        return "<"
+    if valor is not None:
+        return number_format(valor)
+    return ""
+
+
 class Bebedouro(models.Model):
     numero = models.PositiveSmallIntegerField(unique=True)
     local = models.CharField(max_length=200, blank=True)
@@ -132,13 +146,7 @@ class Resultado(models.Model):
     def turbidez_texto(self):
         """Texto de exibição da turbidez — mesmo formato aceito na grade
         ('<0,751' quando abaixo do limite de detecção; vazio sem dado)."""
-        if self.turbidez_abaixo_limite and self.turbidez_valor is not None:
-            return f"<{number_format(self.turbidez_valor)}"
-        if self.turbidez_abaixo_limite:
-            return "<"
-        if self.turbidez_valor is not None:
-            return number_format(self.turbidez_valor)
-        return ""
+        return formatar_turbidez(self.turbidez_valor, self.turbidez_abaixo_limite)
 
     def esta_vazio(self):
         numericos = [self.cloro, self.condutividade, self.nitrato, self.turbidez_valor, self.ph]

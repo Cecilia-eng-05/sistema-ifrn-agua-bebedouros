@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 
-from bebedouros.models import Bebedouro, Coleta, Resultado
+from bebedouros.models import Bebedouro, Coleta, Resultado, formatar_turbidez
 
 
 class ResultadoModelTests(TestCase):
@@ -33,3 +33,17 @@ class ResultadoModelTests(TestCase):
         Resultado.objects.create(coleta=self.coleta, bebedouro=self.b1)
         self.coleta.delete()
         self.assertEqual(Resultado.objects.count(), 0)
+
+
+class FormatarTurbidezTests(TestCase):
+    def test_sem_valor_e_sem_marcador(self):
+        self.assertEqual(formatar_turbidez(None, False), "")
+
+    def test_valor_normal(self):
+        self.assertEqual(formatar_turbidez(Decimal("0.751"), False), "0,751")
+
+    def test_abaixo_do_limite_com_valor(self):
+        self.assertEqual(formatar_turbidez(Decimal("0.751"), True), "<0,751")
+
+    def test_abaixo_do_limite_sem_valor(self):
+        self.assertEqual(formatar_turbidez(None, True), "<")
