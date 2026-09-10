@@ -5,7 +5,7 @@ from django.utils.formats import number_format
 
 from . import grafico, iqab
 from .forms import ColetaForm, ResultadoRowForm, parse_turbidez
-from .models import Bebedouro, Coleta, Resultado
+from .models import Bebedouro, Coleta, Resultado, TrocaFiltro
 from .services import (
     JANELAS_LABELS,
     alertas_internos,
@@ -13,6 +13,7 @@ from .services import (
     linhas_faltantes,
     publicar_coleta,
     recalcular_coleta,
+    salvar_troca_filtro,
     serie_historica,
     situacao_atual_bebedouro,
     situacao_atual_bebedouros,
@@ -148,6 +149,9 @@ def _initial_de(resultado):
         turbidez = number_format(resultado.turbidez_valor)
     else:
         turbidez = None
+    troca = TrocaFiltro.objects.filter(
+        coleta_id=resultado.coleta_id, bebedouro_id=resultado.bebedouro_id
+    ).first()
     return {
         "cloro": resultado.cloro,
         "condutividade": resultado.condutividade,
@@ -157,6 +161,7 @@ def _initial_de(resultado):
         "coliformes_totais": resultado.coliformes_totais,
         "ecoli": resultado.ecoli,
         "filtro": resultado.filtro,
+        "troca_filtro": troca.data_troca if troca else None,
         "fora_de_operacao": resultado.fora_de_operacao,
         "observacao": resultado.observacao,
     }
@@ -222,6 +227,7 @@ def _salvar_grade(coleta, dados_post):
                 "observacao": cd.get("observacao") or "",
             },
         )
+        salvar_troca_filtro(coleta, bebedouro, cd.get("troca_filtro"))
     recalcular_coleta(coleta)
     return avisos
 

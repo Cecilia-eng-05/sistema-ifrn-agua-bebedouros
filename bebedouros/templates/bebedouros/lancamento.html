@@ -20,6 +20,7 @@
           <th>Coliformes Totais</th>
           <th>E. coli</th>
           <th>Filtro</th>
+          <th>Troca de filtro realizada em</th>
           <th>Fora de operação nesta data</th>
           <th>Observação</th>
         </tr>
@@ -29,7 +30,7 @@
         {% if linha.bloqueada %}
           <tr class="bloqueada">
             <td class="cod">{{ linha.bebedouro.codigo }}</td>
-            <td colspan="11">Fora de operação (bebedouro desativado)</td>
+            <td colspan="12">Fora de operação (bebedouro desativado)</td>
           </tr>
         {% else %}
           <tr>
@@ -45,6 +46,7 @@
             <td>{{ linha.form.coliformes_totais }}</td>
             <td>{{ linha.form.ecoli }}</td>
             <td>{{ linha.form.filtro }}</td>
+            <td>{{ linha.form.troca_filtro }}</td>
             <td>{{ linha.form.fora_de_operacao }}</td>
             <td>{{ linha.form.observacao }}</td>
           </tr>

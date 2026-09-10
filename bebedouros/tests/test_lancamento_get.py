@@ -26,3 +26,7 @@ class LancamentoGetTests(TestCase):
         self.assertIsNone(por_codigo["B2"]["form"])
         self.assertTrue(por_codigo["B2"]["bloqueada"])
         self.assertContains(response, "Fora de operação (bebedouro desativado)")
+
+    def test_grid_has_troca_filtro_column(self):
+        response = self.client.get(f"/coletas/{self.coleta.pk}/lancamento/")
+        self.assertContains(response, "Troca de filtro realizada em")
