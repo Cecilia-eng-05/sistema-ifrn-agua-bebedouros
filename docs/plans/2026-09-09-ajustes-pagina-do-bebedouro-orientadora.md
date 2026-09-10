@@ -836,11 +836,19 @@ git commit -m "feat: services de situação e gravação da troca de filtro"
   was added since this plan was written)
 
 **Interfaces:**
-- Produces: `ResultadoRowForm.troca_filtro` — optional `DateField`,
-  `<input type="date">` widget (same pattern as `ColetaForm.data`, so it
-  round-trips ISO `YYYY-MM-DD` regardless of `pt-BR` locale, exactly
-  like that field already does — no `localize=True`, unlike the numeric
-  fields in this same form).
+- Produces: `ResultadoRowForm.troca_filtro` — optional `DateField` with
+  an `<input type="date">` widget **forced to ISO format**
+  (`format="%Y-%m-%d"`). This is NOT quite the same as `ColetaForm.data`:
+  that field never renders a pre-filled value today, so it never hit
+  this — but `troca_filtro` does (Task 8 pre-fills it from an existing
+  `TrocaFiltro`), and Django's default `DateInput` renders initial
+  values in the `pt-br` locale format (`01/09/2026`), which an
+  `<input type="date">` silently ignores (it requires ISO
+  `yyyy-mm-dd`) — the field would just look blank even with data behind
+  it. Confirmed with a throwaway shell check during planning: the
+  default widget renders `value="01/09/2026"`; adding
+  `format="%Y-%m-%d"` renders `value="2026-09-01"` and still parses an
+  ISO-format POST body correctly.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -864,6 +872,15 @@ class ResultadoRowFormTrocaFiltroTests(SimpleTestCase):
         form = ResultadoRowForm(data={"b1-troca_filtro": "2026-09-01"}, prefix="b1")
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data["troca_filtro"], datetime.date(2026, 9, 1))
+
+    def test_valor_inicial_renderiza_em_iso_nao_no_formato_brasileiro(self):
+        # Trap: o widget de data padrão do Django, com LANGUAGE_CODE='pt-br',
+        # renderiza o valor inicial como "01/09/2026" — um <input type="date">
+        # ignora isso silenciosamente (exige yyyy-mm-dd). Sem forçar o formato
+        # do widget, uma troca já lançada pareceria "esquecida" ao reabrir a
+        # grade, mesmo estando salva.
+        form = ResultadoRowForm(initial={"troca_filtro": datetime.date(2026, 9, 1)}, prefix="b1")
+        self.assertIn('value="2026-09-01"', str(form["troca_filtro"]))
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -877,9 +894,15 @@ In `bebedouros/forms.py`, add to `ResultadoRowForm` (after `filtro`):
 
 ```python
     troca_filtro = forms.DateField(
-        required=False, widget=forms.DateInput(attrs={"type": "date"})
+        required=False,
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
 ```
+
+The explicit `format="%Y-%m-%d"` is required — without it, Django
+renders a pre-filled value in the `pt-br` locale format
+(`01/09/2026`), which an `<input type="date">` silently fails to
+display (see Step 1's trap test).
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -1298,7 +1321,7 @@ Replace the full contents of
     <h2>Coletas recentes</h2>
     {% if recentes %}
       {% for resultado in recentes %}
-        <details class="historico-item"{% if forloop.first %} open{% endif %}>
+        <details{% if forloop.first %} open{% endif %} class="historico-item">
           <summary>{{ resultado.coleta.data|date:"d/m/Y" }}</summary>
           <div class="historico-detalhe">
             {% if resultado.fora_de_operacao %}
@@ -1330,7 +1353,7 @@ Replace the full contents of
   </section>
 
   <section class="media-coletas">
-    <h2>Média das últimas {{ media.quantidade }} coletas</h2>
+    <h2>Média das coletas recentes ({{ media.quantidade }})</h2>
     {% if media.quantidade %}
       <div class="painel">
         <table>
@@ -1414,15 +1437,28 @@ In `bebedouros/templates/bebedouros/base.html`, add after the existing
     .media-alerta { color: #922; font-weight: 600; }
 ```
 
-- [ ] **Step 3: Manual smoke check**
+- [ ] **Step 3: Smoke check via the Django test client (no browser available to you — use this instead)**
 
-Run: `./.venv/Scripts/python.exe manage.py runserver` and open a
-bebedouro's page in a browser (pick one with existing seeded data, or
-create one via `/coletas/nova/` if none exists). Confirm: page loads
-without a 500, section order matches §4 of the design doc, first
-"Coletas recentes" item is expanded, filtro box shows
-"Sem registro de troca de filtro." for a bebedouro with none yet.
-Stop the server after checking.
+Run this one-off script and confirm its output:
+
+```bash
+./.venv/Scripts/python.exe manage.py shell -c "
+from django.test import Client
+from bebedouros.models import Bebedouro
+b, _ = Bebedouro.objects.get_or_create(numero=1)
+resp = Client().get(f'/bebedouros/{b.pk}/')
+assert resp.status_code == 200, resp.status_code
+html = resp.content.decode()
+marcos = ['Composição da nota', 'Manutenção do filtro', 'Coletas recentes', 'Média das coletas recentes', 'Evolução']
+posicoes = [html.index(m) for m in marcos]
+assert posicoes == sorted(posicoes), f'ordem errada: {list(zip(marcos, posicoes))}'
+assert 'Sem registro de troca de filtro.' in html
+print('OK — ordem das seções e filtro sem registro conferem')
+"
+```
+
+Expected output: `OK — ordem das seções e filtro sem registro conferem`
+(status code check is implicit — `.content` would raise on a 500).
 
 - [ ] **Step 4: Commit**
 
@@ -1684,7 +1720,7 @@ class BebedouroDetalheTests(TestCase):
         Resultado.objects.create(coleta=coleta, bebedouro=self.b1, **RESULTADO_COMPLETO)
         recalcular_coleta(coleta)
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
-        self.assertContains(response, "Média das últimas 1 coletas")
+        self.assertContains(response, "Média das coletas recentes (1)")
         self.assertContains(response, "Média do IQA-B")
         self.assertContains(response, "100 · Excelente")
 
@@ -1794,16 +1830,58 @@ Run: `./.venv/Scripts/python.exe manage.py test bebedouros`
 Expected: `OK`, same or higher test count than the 171 baseline this
 plan started from.
 
-- [ ] **Step 4: Manual walk-through as staff**
+- [ ] **Step 4: End-to-end walk-through via the Django test client (no browser available to you — use this instead)**
 
-Run: `./.venv/Scripts/python.exe manage.py runserver`. Log in, open
-`/coletas/nova/`, create a coleta, open its lançamento grade, fill in
-one bebedouro's row including "Troca de filtro realizada em", save as
-rascunho, publish it. Open that bebedouro's public page (in a private/
-incognito window, logged out) and confirm: Composição da nota is
-visible, the filtro box shows ✅ with the date just entered, the
-"Coletas recentes" list shows that coleta open, and the média block
-shows one coleta's worth of data. Stop the server.
+Run this one-off script — it plays the real flow (log in as staff,
+create a coleta, fill the grade including "Troca de filtro realizada
+em", save as rascunho, publish, then re-fetch the page logged out) and
+confirms what a visitor would actually see:
+
+```bash
+./.venv/Scripts/python.exe manage.py shell -c "
+import datetime
+from django.contrib.auth.models import User
+from django.test import Client
+from bebedouros.models import Bebedouro, Coleta
+
+User.objects.filter(username='_smoke').delete()
+User.objects.create_user('_smoke', password='segredo')
+b, _ = Bebedouro.objects.get_or_create(numero=1)
+staff = Client()
+staff.login(username='_smoke', password='segredo')
+staff.post('/coletas/nova/', {'data': '2026-09-01'})
+coleta = Coleta.objects.get(data=datetime.date(2026, 9, 1))
+dados = {
+    f'b{b.id}-cloro': '1,0', f'b{b.id}-nitrato': '5,0', f'b{b.id}-ph': '7,0',
+    f'b{b.id}-turbidez': '0,5', f'b{b.id}-coliformes_totais': 'AUSENTE',
+    f'b{b.id}-ecoli': 'AUSENTE', f'b{b.id}-filtro': 'dentro',
+    f'b{b.id}-troca_filtro': '2026-09-01',
+}
+staff.post(f'/coletas/{coleta.pk}/lancamento/', dados)
+staff.post(f'/coletas/{coleta.pk}/publicar/', {'confirmar': '1'})
+
+visitante = Client()
+resp = visitante.get(f'/bebedouros/{b.pk}/')
+assert resp.status_code == 200
+html = resp.content.decode()
+for esperado in ['Composição da nota', '✅', 'dentro da validade', '01/09/2026', 'Média das coletas recentes (1)']:
+    assert esperado in html, f'faltando: {esperado!r}'
+print('OK — fluxo completo (lançar, publicar, ver como visitante) confere')
+User.objects.filter(username='_smoke').delete()
+coleta.delete()
+"
+```
+
+Expected output: `OK — fluxo completo (lançar, publicar, ver como
+visitante) confere`. The script cleans up its own test user and coleta
+at the end either way — if it fails partway, remove them manually
+before re-running (`Coleta.objects.filter(data=datetime.date(2026,9,1)).delete()`).
+
+Note: this runs against the real local `db.sqlite3` (not an isolated
+test database) — it's the only way to exercise the actual dev database
+outside the test suite. Harmless today (gitignored file, cleaned up
+above), but once real 2024/2025 data has been typed in, re-run this
+check against a copy of the database instead of the live one.
 
 - [ ] **Step 5: Update the progress log**
 
