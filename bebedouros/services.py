@@ -324,3 +324,39 @@ def salvar_troca_filtro(coleta, bebedouro, data_troca):
     TrocaFiltro.objects.update_or_create(
         coleta=coleta, bebedouro=bebedouro, defaults={"data_troca": data_troca}
     )
+
+
+def _filtro_esperado(bebedouro, data_coleta):
+    """O que o campo Filtro (dentro/vencido) desta coleta deveria dizer,
+    segundo a troca de filtro mais recente registrada ATÉ essa data (uma
+    troca lançada depois não conta — não dá pra julgar o passado com
+    informação do futuro). None se não há nenhuma troca conhecida até
+    essa data — nada a comparar."""
+    troca = (
+        TrocaFiltro.objects.filter(bebedouro=bebedouro, data_troca__lte=data_coleta)
+        .order_by("-data_troca")
+        .first()
+    )
+    if troca is None:
+        return None
+    vencimento = troca.data_troca + datetime.timedelta(days=VALIDADE_FILTRO_DIAS)
+    return Resultado.FILTRO_DENTRO if data_coleta <= vencimento else Resultado.FILTRO_VENCIDO
+
+
+def aviso_filtro_incompativel(bebedouro, coleta, filtro_escolhido):
+    """Se houver troca de filtro registrada até a data desta coleta e o
+    valor escolhido no campo Filtro não bater com o que a regra dos 6
+    meses esperaria, retorna um aviso pronto para mostrar ao bolsista ao
+    salvar a grade. None quando não há nada para comparar (nenhuma troca
+    conhecida até essa data, ou o campo Filtro em branco) ou quando os
+    dois batem certinho."""
+    if not filtro_escolhido:
+        return None
+    esperado = _filtro_esperado(bebedouro, coleta.data)
+    if esperado is None or esperado == filtro_escolhido:
+        return None
+    rotulos = dict(Resultado.FILTRO_CHOICES)
+    return (
+        f'{bebedouro.codigo}: pela última troca de filtro registrada, o esperado aqui '
+        f'seria "{rotulos[esperado]}", mas foi marcado "{rotulos[filtro_escolhido]}".'
+    )

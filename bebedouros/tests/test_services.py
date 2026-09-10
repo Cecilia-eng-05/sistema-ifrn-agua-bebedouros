@@ -6,6 +6,7 @@ from django.test import TestCase
 from bebedouros.models import Bebedouro, Coleta, Resultado, TrocaFiltro
 from bebedouros.services import (
     alertas_internos,
+    aviso_filtro_incompativel,
     coletas_recentes,
     linhas_faltantes,
     media_coletas,
@@ -529,3 +530,70 @@ class SalvarTrocaFiltroTests(TestCase):
         salvar_troca_filtro(self.coleta, self.b1, datetime.date.today())
         salvar_troca_filtro(self.coleta, self.b1, datetime.date.today())
         self.assertEqual(TrocaFiltro.objects.count(), 1)
+
+
+class AvisoFiltroIncompativelTests(TestCase):
+    def setUp(self):
+        self.b1 = Bebedouro.objects.create(numero=1)
+
+    def _coleta(self, data):
+        return Coleta.objects.create(data=data, status=Coleta.PUBLICADO)
+
+    def test_sem_troca_registrada_nao_avisa(self):
+        coleta = self._coleta(datetime.date(2026, 9, 1))
+        aviso = aviso_filtro_incompativel(self.b1, coleta, Resultado.FILTRO_VENCIDO)
+        self.assertIsNone(aviso)
+
+    def test_filtro_em_branco_nao_avisa(self):
+        troca_coleta = self._coleta(datetime.date(2026, 1, 1))
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=troca_coleta, data_troca=datetime.date(2026, 1, 1)
+        )
+        coleta = self._coleta(datetime.date(2026, 9, 1))
+        aviso = aviso_filtro_incompativel(self.b1, coleta, "")
+        self.assertIsNone(aviso)
+
+    def test_bate_com_o_esperado_nao_avisa(self):
+        troca_coleta = self._coleta(datetime.date(2026, 8, 1))
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=troca_coleta, data_troca=datetime.date(2026, 8, 1)
+        )
+        coleta = self._coleta(datetime.date(2026, 9, 1))  # 31 dias depois — dentro
+        aviso = aviso_filtro_incompativel(self.b1, coleta, Resultado.FILTRO_DENTRO)
+        self.assertIsNone(aviso)
+
+    def test_diverge_do_esperado_avisa(self):
+        troca_coleta = self._coleta(datetime.date(2026, 1, 1))
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=troca_coleta, data_troca=datetime.date(2026, 1, 1)
+        )
+        coleta = self._coleta(datetime.date(2026, 9, 1))  # bem mais de 182 dias — vencido
+        aviso = aviso_filtro_incompativel(self.b1, coleta, Resultado.FILTRO_DENTRO)
+        self.assertIsNotNone(aviso)
+        self.assertIn("B1", aviso)
+        self.assertIn("Vencido", aviso)
+        self.assertIn("Dentro da validade", aviso)
+
+    def test_ignora_troca_registrada_depois_desta_coleta(self):
+        # A troca é de outubro; a coleta sendo lançada é de setembro —
+        # não dá pra usar uma troca do futuro pra julgar o passado.
+        coleta = self._coleta(datetime.date(2026, 9, 1))
+        troca_coleta = self._coleta(datetime.date(2026, 10, 1))
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=troca_coleta, data_troca=datetime.date(2026, 10, 1)
+        )
+        aviso = aviso_filtro_incompativel(self.b1, coleta, Resultado.FILTRO_VENCIDO)
+        self.assertIsNone(aviso)
+
+    def test_usa_a_troca_mais_proxima_antes_da_coleta(self):
+        antiga = self._coleta(datetime.date(2026, 1, 1))
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=antiga, data_troca=datetime.date(2026, 1, 1)
+        )
+        recente = self._coleta(datetime.date(2026, 8, 15))
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=recente, data_troca=datetime.date(2026, 8, 15)
+        )
+        coleta = self._coleta(datetime.date(2026, 9, 1))  # 17 dias após a troca de agosto — dentro
+        aviso = aviso_filtro_incompativel(self.b1, coleta, Resultado.FILTRO_DENTRO)
+        self.assertIsNone(aviso)

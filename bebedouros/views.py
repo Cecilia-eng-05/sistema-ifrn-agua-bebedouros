@@ -9,6 +9,7 @@ from .models import Bebedouro, Coleta, Resultado, TrocaFiltro
 from .services import (
     JANELAS_LABELS,
     alertas_internos,
+    aviso_filtro_incompativel,
     coletas_recentes,
     linhas_faltantes,
     media_coletas,
@@ -234,6 +235,9 @@ def _salvar_grade(coleta, dados_post):
             },
         )
         salvar_troca_filtro(coleta, bebedouro, cd.get("troca_filtro"))
+        aviso_filtro = aviso_filtro_incompativel(bebedouro, coleta, cd.get("filtro") or "")
+        if aviso_filtro:
+            avisos.append(aviso_filtro)
     recalcular_coleta(coleta)
     return avisos
 

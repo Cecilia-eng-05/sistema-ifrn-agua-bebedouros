@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
 from django.test import TestCase
 
-from bebedouros.models import Bebedouro, Coleta, Resultado
+from bebedouros.models import Bebedouro, Coleta, Resultado, TrocaFiltro
 
 
 class LancamentoPostTests(TestCase):
@@ -44,3 +44,42 @@ class LancamentoPostTests(TestCase):
         self.assertEqual(r.ph, Decimal("20.00"))
         mensagens = [m.message for m in get_messages(response.wsgi_request)]
         self.assertTrue(any("pH" in m for m in mensagens))
+
+    def test_filtro_incompativel_com_troca_registrada_avisa(self):
+        # Troca em janeiro; esta coleta é de setembro (bem mais de 6
+        # meses depois) — deveria estar "vencido", mas o bolsista marca
+        # "dentro da validade".
+        troca_coleta = Coleta.objects.create(
+            data=datetime.date(2026, 1, 1), status=Coleta.PUBLICADO
+        )
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=troca_coleta, data_troca=datetime.date(2026, 1, 1)
+        )
+        response = self._post(filtro="dentro")
+        mensagens = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertTrue(any("esperado aqui seria" in m for m in mensagens))
+
+    def test_filtro_compativel_nao_avisa(self):
+        troca_coleta = Coleta.objects.create(
+            data=datetime.date(2026, 8, 20), status=Coleta.PUBLICADO
+        )
+        TrocaFiltro.objects.create(
+            bebedouro=self.b1, coleta=troca_coleta, data_troca=datetime.date(2026, 8, 20)
+        )
+        response = self._post(filtro="dentro")  # 12 dias depois — dentro da validade
+        mensagens = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertFalse(any("esperado aqui seria" in m for m in mensagens))
+
+    def test_sem_troca_registrada_nao_avisa(self):
+        response = self._post(filtro="vencido")
+        mensagens = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertFalse(any("esperado aqui seria" in m for m in mensagens))
+
+    def test_troca_lancada_na_mesma_grade_ja_entra_na_comparacao(self):
+        # O bolsista troca o filtro nesta mesma coleta (12 dias antes —
+        # bem dentro da validade), mas marca "vencido" por engano. O
+        # aviso deve usar a troca recém-lançada nesta mesma gravação,
+        # não só as que já existiam antes.
+        response = self._post(filtro="vencido", troca_filtro="2026-08-20")
+        mensagens = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertTrue(any("esperado aqui seria" in m for m in mensagens))
