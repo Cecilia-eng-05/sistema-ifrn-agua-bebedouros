@@ -9,14 +9,16 @@ from .models import Bebedouro, Coleta, Resultado, TrocaFiltro
 from .services import (
     JANELAS_LABELS,
     alertas_internos,
-    historico_bebedouro,
+    coletas_recentes,
     linhas_faltantes,
+    media_coletas,
     publicar_coleta,
     recalcular_coleta,
     salvar_troca_filtro,
     serie_historica,
     situacao_atual_bebedouro,
     situacao_atual_bebedouros,
+    situacao_filtro,
     ultimo_resultado,
 )
 from .validation import avisos_para_resultado
@@ -95,7 +97,9 @@ def bebedouro_detalhe(request, pk):
 
     pontos = serie_historica(bebedouro, janela, apenas_publicadas=apenas_publicadas)
     grafico_dados = grafico.montar_grafico(pontos, dominio_y=(0, 100))
-    historico = historico_bebedouro(bebedouro, apenas_publicadas=apenas_publicadas)
+    recentes = coletas_recentes(bebedouro, apenas_publicadas=apenas_publicadas)
+    media = media_coletas(recentes)
+    filtro = situacao_filtro(bebedouro, apenas_publicadas=apenas_publicadas)
     ultimo = ultimo_resultado(bebedouro, apenas_publicadas=apenas_publicadas)
 
     return render(
@@ -108,7 +112,9 @@ def bebedouro_detalhe(request, pk):
             "grafico": grafico_dados,
             "janela": janela,
             "janelas_labels": JANELAS_LABELS,
-            "historico": historico,
+            "recentes": recentes,
+            "media": media,
+            "filtro": filtro,
             "ultimo": ultimo,
         },
     )
