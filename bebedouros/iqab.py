@@ -179,3 +179,13 @@ def calcular(resultado):
         "co": _arredondar(co),
         "versao": VERSAO_METODOLOGIA,
     }
+
+
+def media(notas):
+    """Média de uma lista de notas de IQA-B já calculadas (Decimal), para
+    o bloco 'Média das coletas recentes' da página do bebedouro. Arredonda
+    do mesmo jeito que uma nota individual (corta pra baixo). None se a
+    lista estiver vazia."""
+    if not notas:
+        return None
+    return _arredondar(sum(notas) / len(notas))

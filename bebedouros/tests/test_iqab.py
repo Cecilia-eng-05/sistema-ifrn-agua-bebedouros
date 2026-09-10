@@ -170,6 +170,18 @@ class CalcularTests(TestCase):
         self.assertEqual(d["classificacao"], "Excelente")
 
 
+class MediaTests(TestCase):
+    def test_lista_vazia_retorna_none(self):
+        self.assertIsNone(iqab.media([]))
+
+    def test_media_simples(self):
+        self.assertEqual(iqab.media([Decimal("80"), Decimal("60")]), Decimal("70"))
+
+    def test_corta_pra_baixo_como_uma_nota_unica(self):
+        # (79 + 80) / 2 = 79.5 -> corta pra 79, não arredonda pra 80.
+        self.assertEqual(iqab.media([Decimal("79"), Decimal("80")]), Decimal("79"))
+
+
 class RecalculoAoSalvarTests(TestCase):
     def setUp(self):
         User.objects.create_user("nucleo", password="segredo")
