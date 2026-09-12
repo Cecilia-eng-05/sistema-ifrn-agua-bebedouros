@@ -9,6 +9,7 @@ from .models import Bebedouro, Coleta, Resultado, TrocaFiltro
 from .services import (
     JANELAS_LABELS,
     alertas_internos,
+    alertas_publicos,
     aviso_filtro_incompativel,
     coletas_recentes,
     linhas_faltantes,
@@ -59,12 +60,64 @@ def mapa(request):
     return render(request, "bebedouros/mapa.html", {"pontos": pontos})
 
 
+FAIXA_SLUGS = {
+    "Excelente": "excelente",
+    "Boa": "boa",
+    "Regular": "regular",
+    "Ruim": "ruim",
+    "Crítica": "critica",
+}
+
+
 def entenda_iqab(request):
-    return render(request, "bebedouros/entenda_iqab.html")
+    # Pesos e faixas vêm de iqab.py para o texto público nunca divergir da
+    # conta de verdade (DESENHO-PARTE-VISUAL.md §7).
+    pesos = {
+        "qfq": int(iqab.PESO_QFQ * 100),
+        "qm": int(iqab.PESO_QM * 100),
+        "co": int(iqab.PESO_CO * 100),
+    }
+    pesos_decimais = {
+        "qfq": number_format(iqab.PESO_QFQ, 1),
+        "qm": number_format(iqab.PESO_QM, 1),
+        "co": number_format(iqab.PESO_CO, 1),
+    }
+    pesos_qfq = {
+        "cloro": int(iqab.PESO_CLORO * 100),
+        "turbidez": int(iqab.PESO_TURBIDEZ * 100),
+        "ph": int(iqab.PESO_PH * 100),
+        "nitrato": int(iqab.PESO_NITRATO * 100),
+    }
+    faixas = []
+    for i, (minimo, nome) in enumerate(iqab.FAIXAS):
+        maximo = 100 if i == 0 else int(iqab.FAIXAS[i - 1][0]) - 1
+        faixas.append(
+            {
+                "minimo": int(minimo),
+                "maximo": maximo,
+                "nome": nome,
+                "slug": FAIXA_SLUGS[nome],
+            }
+        )
+    return render(
+        request,
+        "bebedouros/entenda_iqab.html",
+        {
+            "pesos": pesos,
+            "pesos_decimais": pesos_decimais,
+            "pesos_qfq": pesos_qfq,
+            "faixas": faixas,
+        },
+    )
 
 
 def alertas_publico(request):
-    return render(request, "bebedouros/alertas_publico.html")
+    situacoes = situacao_atual_bebedouros(apenas_publicadas=True)
+    return render(
+        request,
+        "bebedouros/alertas_publico.html",
+        {"alertas": alertas_publicos(situacoes)},
+    )
 
 
 @login_required

@@ -167,6 +167,28 @@ def alertas_internos(situacoes):
     }
 
 
+def alertas_publicos(situacoes):
+    """Para a aba pública de Alertas: a partir da lista devolvida por
+    situacao_atual_bebedouros(apenas_publicadas=True), separa os bebedouros
+    ativos cujo resultado publicado mais recente ficou em Ruim/Crítica e os
+    que estão com o filtro fora da validade. Mesma regra das duas primeiras
+    partes de alertas_internos(); 'quinzena sem dados' é só alerta interno."""
+    ativos = [s for s in situacoes if s["bebedouro"].ativo]
+    iqab_ruim = [
+        s
+        for s in ativos
+        if s["resultado"]
+        and s["resultado"].iqab_status == iqab.CALCULADO
+        and s["resultado"].iqab_classificacao in ("Ruim", "Crítica")
+    ]
+    filtro_vencido = [
+        s
+        for s in ativos
+        if s["resultado"] and s["resultado"].filtro == Resultado.FILTRO_VENCIDO
+    ]
+    return {"iqab_ruim": iqab_ruim, "filtro_vencido": filtro_vencido}
+
+
 JANELA_DIAS = {"6m": 182, "12m": 365}
 JANELAS_LABELS = {"6m": "6 meses", "12m": "12 meses", "tudo": "Tudo"}
 

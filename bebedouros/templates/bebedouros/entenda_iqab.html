@@ -3,6 +3,206 @@
 {% block conteudo %}
   <div class="mapa-cabecalho">
     <h1>Entenda o IQA-B</h1>
-    <p class="mapa-descricao">Esta página está em construção. Em breve, aqui você vai encontrar a explicação de cada parâmetro monitorado, os limites da portaria, a tabela de classificação e como a nota final é calculada.</p>
+    <p class="mapa-descricao">
+      O IQA-B (Índice de Qualidade da Água de Bebedouros) é uma nota de 0 a 100
+      que resume, num só número, a qualidade da água de cada bebedouro numa
+      coleta. Ele reúne três aspectos: a parte físico-química, a parte
+      microbiológica e a situação do filtro.
+    </p>
   </div>
+
+  <section class="iqab-secao">
+    <h2>Como a nota é montada</h2>
+    <div class="cartoes-indice-grid iqab-montagem">
+      <div class="cartao-indice">
+        <span class="cartao-indice-nome">Físico-química (QFQ)</span>
+        <span class="cartao-indice-peso">peso {{ pesos.qfq }}%</span>
+        <span>Cloro residual livre, turbidez, pH e nitrato.</span>
+      </div>
+      <div class="cartao-indice">
+        <span class="cartao-indice-nome">Microbiológica (QM)</span>
+        <span class="cartao-indice-peso">peso {{ pesos.qm }}%</span>
+        <span>Coliformes totais e E. coli.</span>
+      </div>
+      <div class="cartao-indice">
+        <span class="cartao-indice-nome">Filtro (CO)</span>
+        <span class="cartao-indice-peso">peso {{ pesos.co }}%</span>
+        <span>Filtro dentro da validade ou vencido.</span>
+      </div>
+    </div>
+
+    <p class="iqab-formula">
+      IQA-B = (QFQ × {{ pesos_decimais.qfq }}) + (QM × {{ pesos_decimais.qm }}) + (CO × {{ pesos_decimais.co }})
+    </p>
+
+    <div class="iqab-nota-box">
+      <p class="iqab-nota-titulo">O que pesa mais na prática</p>
+      <ul>
+        <li>
+          No QFQ, cada parâmetro recebe 0, 50 ou 100 conforme fica dentro ou
+          fora do limite da portaria (só a turbidez tem o meio-termo de 50).
+          Dentro dele, o cloro pesa {{ pesos_qfq.cloro }}%, a turbidez
+          {{ pesos_qfq.turbidez }}%, o pH {{ pesos_qfq.ph }}% e o nitrato
+          {{ pesos_qfq.nitrato }}%.
+        </li>
+        <li>
+          A condutividade é medida em toda coleta, mas <strong>não entra no
+          cálculo</strong> — veja o porquê na seção <em>O que é monitorado</em>.
+        </li>
+        <li><strong>E. coli presente zera o QM inteiro.</strong></li>
+        <li>No CO, dentro da validade vale 100 e vencido vale 0.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="iqab-secao">
+    <h2>O que a classificação quer dizer</h2>
+    <div class="painel">
+      <table>
+        <thead>
+          <tr><th>Nota</th><th>Classificação</th></tr>
+        </thead>
+        <tbody>
+          {% for faixa in faixas %}
+            <tr>
+              <td>
+                {% if forloop.last %}
+                  abaixo de {{ faixa.maximo|add:"1" }}
+                {% else %}
+                  {{ faixa.minimo }} a {{ faixa.maximo }}
+                {% endif %}
+              </td>
+              <td class="iqab faixa-{{ faixa.slug }}">
+                <span class="gota gota-sm gota-{{ faixa.slug }}"></span>
+                {{ faixa.nome }}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="iqab-obs">
+      Quando falta algum dado obrigatório da coleta, o bebedouro fica sem nota
+      (gota cinza) em vez de nota zero — para não passar a impressão errada de
+      água ruim.
+    </p>
+  </section>
+
+  <section class="iqab-secao">
+    <h2>O que é monitorado</h2>
+    <div class="param-grid">
+      <article class="param-card">
+        <h3>Cloro residual livre</h3>
+        <p><span class="param-rotulo">O que é:</span> o cloro que permanece na
+          água depois da desinfecção, ajudando a mantê-la protegida contra
+          microrganismos até o ponto de consumo.</p>
+        <p><span class="param-rotulo">Por que monitoramos:</span> mostra se a
+          água chega ao bebedouro ainda com proteção. Valores muito baixos ou
+          altos demais precisam de atenção.</p>
+        <p class="param-meta">
+          <span class="param-rotulo">Unidade:</span> mg/L<br>
+          <span class="param-rotulo">Referência — Portaria GM/MS nº 888/2021:</span>
+          entre 0,2 e 5,0 mg/L.
+        </p>
+      </article>
+
+      <article class="param-card">
+        <h3>Turbidez</h3>
+        <p><span class="param-rotulo">O que é:</span> uma medida das partículas
+          em suspensão na água — quanto maior, mais turva a aparência.</p>
+        <p><span class="param-rotulo">Por que monitoramos:</span> indica
+          alterações físicas na água e, quando alta, pode atrapalhar a
+          desinfecção, porque as partículas protegem microrganismos.</p>
+        <p class="param-meta">
+          <span class="param-rotulo">Unidade:</span> uT (unidade de turbidez)<br>
+          <span class="param-rotulo">Referência — Portaria GM/MS nº 888/2021:</span>
+          até 5,0 uT no ponto de consumo.
+        </p>
+      </article>
+
+      <article class="param-card">
+        <h3>pH</h3>
+        <p><span class="param-rotulo">O que é:</span> indica se a água está mais
+          ácida, neutra ou alcalina.</p>
+        <p><span class="param-rotulo">Por que monitoramos:</span> o pH influencia
+          a química da água e a eficiência da desinfecção pelo cloro, e ajuda a
+          perceber alterações na qualidade.</p>
+        <p class="param-meta">
+          <span class="param-rotulo">Unidade:</span> adimensional<br>
+          <span class="param-rotulo">Referência — Portaria GM/MS nº 888/2021:</span>
+          faixa de 6,0 a 9,0 nas condições de desinfecção.
+        </p>
+      </article>
+
+      <article class="param-card">
+        <h3>Nitrato</h3>
+        <p><span class="param-rotulo">O que é:</span> uma forma de nitrogênio que
+          pode aparecer naturalmente ou vir de contaminação por esgoto, resíduos
+          e fertilizantes.</p>
+        <p><span class="param-rotulo">Por que monitoramos:</span> ajuda a
+          identificar alterações na qualidade da água e a verificar se a
+          concentração segue dentro do limite para consumo.</p>
+        <p class="param-meta">
+          <span class="param-rotulo">Unidade:</span> mg/L de N<br>
+          <span class="param-rotulo">Referência — Portaria GM/MS nº 888/2021:</span>
+          até 10 mg/L de N.
+        </p>
+      </article>
+
+      <article class="param-card">
+        <h3>Condutividade elétrica</h3>
+        <p><span class="param-rotulo">O que é:</span> a capacidade da água de
+          conduzir corrente elétrica, ligada à quantidade de sais e outros íons
+          dissolvidos.</p>
+        <p><span class="param-rotulo">Por que monitoramos:</span> acompanha
+          variações na composição da água, principalmente de salinidade.</p>
+        <p class="param-meta">
+          <span class="param-rotulo">Unidade:</span> µS/cm (microsiemens por
+          centímetro)<br>
+          <span class="param-rotulo">Referência — Portaria GM/MS nº 888/2021:</span>
+          não há valor máximo estabelecido para condutividade.
+        </p>
+        <p class="param-obs">
+          Neste sistema a condutividade é um parâmetro complementar: ela
+          <strong>não entra no cálculo</strong> do IQA-B, e sua leitura
+          considera o comportamento dos resultados ao longo do tempo.
+        </p>
+      </article>
+
+      <article class="param-card">
+        <h3>Coliformes totais</h3>
+        <p><span class="param-rotulo">O que é:</span> um grupo de bactérias usado
+          como indicador das condições microbiológicas da água. Sua presença
+          pode apontar alterações na qualidade ou condições que favorecem
+          contaminação no sistema.</p>
+        <p><span class="param-rotulo">Por que monitoramos:</span> permite
+          perceber alterações microbiológicas no ponto de consumo e avaliar a
+          necessidade de investigar higiene, armazenamento e distribuição.</p>
+        <p class="param-meta">
+          <span class="param-rotulo">Unidade:</span> presença / ausência (ou
+          NMP/100 mL, conforme o método)<br>
+          <span class="param-rotulo">Referência — Portaria GM/MS nº 888/2021:</span>
+          no monitoramento dos bebedouros, a presença de coliformes totais é
+          sinal de alerta para investigação do ponto de consumo.
+        </p>
+      </article>
+
+      <article class="param-card">
+        <h3>Escherichia coli (E. coli)</h3>
+        <p><span class="param-rotulo">O que é:</span> bactéria normalmente
+          presente no intestino de pessoas e animais. Na água, indica
+          contaminação de origem fecal.</p>
+        <p><span class="param-rotulo">Por que monitoramos:</span> é essencial
+          para a segurança microbiológica: a presença de E. coli indica possível
+          contaminação fecal e exige investigação imediata da origem.</p>
+        <p class="param-meta">
+          <span class="param-rotulo">Unidade:</span> presença / ausência (ou
+          NMP/100 mL, conforme o método)<br>
+          <span class="param-rotulo">Referência — Portaria GM/MS nº 888/2021:</span>
+          ausência em 100 mL de água. Qualquer resultado com presença é não
+          conformidade e deve ser investigado.
+        </p>
+      </article>
+    </div>
+  </section>
 {% endblock %}

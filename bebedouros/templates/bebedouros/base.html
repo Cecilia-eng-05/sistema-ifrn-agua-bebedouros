@@ -298,6 +298,55 @@
       padding: 3px 6px; border-radius: 999px; white-space: nowrap;
       box-shadow: 0 1px 3px rgba(10, 30, 40, 0.3);
     }
+    /* Aba "Entenda o IQA-B" (pública) */
+    .iqab-secao { margin-top: 30px; }
+    .iqab-secao > h2 {
+      font-size: 18px; margin: 0 0 12px; color: var(--profunda);
+    }
+    .iqab-montagem .cartao-indice,
+    .iqab-montagem .cartao-indice:nth-child(2n) {
+      background: var(--superficie); border-color: var(--profunda);
+    }
+    .iqab-secao .painel th, .iqab-secao .painel td { text-align: center; }
+    .iqab-formula {
+      display: block; width: fit-content; max-width: 100%;
+      margin: 16px auto 6px; text-align: center;
+      background: var(--clara); color: var(--profunda);
+      font-size: 15px; font-weight: 650; letter-spacing: -0.01em;
+      padding: 10px 16px; border-radius: 8px;
+    }
+    .iqab-nota-box {
+      background: var(--superficie); border: 1px solid var(--borda);
+      border-radius: 12px; padding: 14px 18px; margin-top: 10px;
+    }
+    .iqab-nota-titulo { font-weight: 650; margin: 0 0 6px; }
+    .iqab-nota-box ul { margin: 0; padding-left: 20px; }
+    .iqab-nota-box li { margin: 6px 0; font-size: 14px; }
+    .iqab-obs { color: var(--tinta-suave); font-size: 13px; margin: 10px 0 0; }
+
+    .param-grid {
+      display: grid; gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    }
+    .param-card {
+      background: var(--superficie); border: 1px solid var(--profunda);
+      border-radius: 12px; padding: 16px 18px;
+    }
+    .param-card h3 {
+      text-align: center;
+      font-size: 15px; margin: 0 0 8px; color: var(--profunda);
+    }
+    .param-card p { margin: 6px 0; font-size: 14px; }
+    .param-rotulo { font-weight: 650; }
+    .param-meta {
+      margin-top: 12px; padding-top: 10px; font-size: 13px;
+      color: var(--tinta-suave); border-top: 1px solid var(--borda);
+    }
+    .param-obs {
+      margin-top: 10px; background: var(--clara); border-radius: 8px;
+      padding: 8px 12px; font-size: 13px;
+    }
+
     @media (max-width: 620px) { main { padding: 18px 14px 48px; } h1 { font-size: 20px; } }
   </style>
 </head>

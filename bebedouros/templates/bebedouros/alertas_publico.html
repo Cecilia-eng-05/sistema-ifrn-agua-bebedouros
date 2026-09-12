@@ -3,6 +3,61 @@
 {% block conteudo %}
   <div class="mapa-cabecalho">
     <h1>Alertas</h1>
-    <p class="mapa-descricao">Esta página está em construção. Em breve, aqui você vai encontrar a lista de bebedouros com filtro vencido ou com IQA-B ruim ou crítico.</p>
+    <p class="mapa-descricao">
+      Esta página reúne os pontos que a equipe do projeto está acompanhando
+      mais de perto: bebedouros cuja análise mais recente ficou nas faixas
+      Ruim ou Crítica do IQA-B, e bebedouros com o filtro fora da validade.
+      A lista serve para orientar a manutenção e a repetição de coletas — não
+      é uma reprovação do ponto. Toque em um bebedouro para ver o histórico
+      completo.
+    </p>
   </div>
+
+  <section class="iqab-secao">
+    <h2>Qualidade ruim ou crítica</h2>
+    {% if alertas.iqab_ruim %}
+      <div class="painel">
+        <table>
+          <thead>
+            <tr><th></th><th>Código</th><th>Local</th><th>Situação</th></tr>
+          </thead>
+          <tbody>
+            {% for s in alertas.iqab_ruim %}
+              <tr>
+                <td><span class="gota gota-sm gota-{{ s.resultado.iqab_faixa_slug }}"></span></td>
+                <td class="cod"><a href="{% url 'bebedouro_detalhe' s.bebedouro.pk %}">{{ s.bebedouro.codigo }}</a></td>
+                <td>{{ s.bebedouro.local }}</td>
+                <td>{{ s.resultado.iqab_classificacao }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="lista-vazia">Nenhum bebedouro em situação ruim ou crítica no momento.</p>
+    {% endif %}
+  </section>
+
+  <section class="iqab-secao">
+    <h2>Filtro fora da validade</h2>
+    {% if alertas.filtro_vencido %}
+      <div class="painel">
+        <table>
+          <thead>
+            <tr><th>Código</th><th>Local</th></tr>
+          </thead>
+          <tbody>
+            {% for s in alertas.filtro_vencido %}
+              <tr>
+                <td class="cod"><a href="{% url 'bebedouro_detalhe' s.bebedouro.pk %}">{{ s.bebedouro.codigo }}</a></td>
+                <td>{{ s.bebedouro.local }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="lista-vazia">Nenhum filtro fora da validade no momento.</p>
+    {% endif %}
+  </section>
 {% endblock %}
