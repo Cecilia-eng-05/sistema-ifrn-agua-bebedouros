@@ -3,13 +3,17 @@
 {% block titulo %}{{ bebedouro.codigo }} — Monitoramento da Água — IFRN-CNAT{% endblock %}
 {% block conteudo %}
   <div class="cabecalho-bebedouro">
-    <div class="foto-placeholder" aria-hidden="true">
-      <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.5">
-        <rect x="3" y="5" width="18" height="14" rx="2"/>
-        <circle cx="8.5" cy="10" r="1.5"/>
-        <path d="M21 15l-5-5-4 4-3-3-6 6"/>
-      </svg>
-    </div>
+    {% if bebedouro.foto %}
+      <img class="foto-bebedouro" src="{{ bebedouro.foto.url }}" alt="Foto do bebedouro {{ bebedouro.codigo }}">
+    {% else %}
+      <div class="foto-placeholder" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="5" width="18" height="14" rx="2"/>
+          <circle cx="8.5" cy="10" r="1.5"/>
+          <path d="M21 15l-5-5-4 4-3-3-6 6"/>
+        </svg>
+      </div>
+    {% endif %}
     <div class="gota-grande-wrap">
       {% if not ultimo.fora_de_operacao and situacao.resultado.iqab_status == "calculado" %}
         <span class="gota gota-lg gota-{{ situacao.resultado.iqab_faixa_slug }}"></span>

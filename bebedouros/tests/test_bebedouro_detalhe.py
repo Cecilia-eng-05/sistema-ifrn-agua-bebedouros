@@ -1,8 +1,12 @@
 import datetime
+import tempfile
 from decimal import Decimal
+from io import BytesIO
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase, override_settings
+from PIL import Image
 
 from bebedouros.models import Bebedouro, Coleta, Resultado, TrocaFiltro
 from bebedouros.services import recalcular_coleta
@@ -48,6 +52,24 @@ class BebedouroDetalheTests(TestCase):
     def test_sem_dados_mostra_gota_vazia(self):
         response = self.client.get(f"/bebedouros/{self.b1.pk}/")
         self.assertContains(response, 'class="gota gota-lg gota-vazia"')
+
+    def test_sem_foto_mostra_icone_padrao(self):
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertContains(response, 'class="foto-placeholder"')
+        self.assertNotContains(response, "<img")
+
+    @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+    def test_com_foto_mostra_a_foto(self):
+        buffer = BytesIO()
+        Image.new("RGB", (10, 10), color="green").save(buffer, format="JPEG")
+        buffer.seek(0)
+        self.b1.foto = SimpleUploadedFile("foto.jpg", buffer.read(), content_type="image/jpeg")
+        self.b1.save()
+
+        response = self.client.get(f"/bebedouros/{self.b1.pk}/")
+        self.assertNotContains(response, 'class="foto-placeholder"')
+        self.assertContains(response, "<img")
+        self.assertContains(response, self.b1.foto.url)
 
     def test_fora_de_operacao_mostra_aviso_e_observacao(self):
         coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)

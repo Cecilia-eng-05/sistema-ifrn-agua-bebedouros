@@ -124,6 +124,12 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Arquivos enviados pelo admin (fotos de bebedouro). Servidos pelo Django só
+# em desenvolvimento (ver urls.py); em produção, a hospedagem é configurada
+# para servir esta pasta diretamente.
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {

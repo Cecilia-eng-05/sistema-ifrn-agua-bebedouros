@@ -15,7 +15,7 @@ class BebedouroAdmin(admin.ModelAdmin):
     list_display_links = ["codigo_col"]
     list_editable = ["local"]
     ordering = ["numero"]
-    fields = ["numero", "local", "desativado_em"]
+    fields = ["numero", "local", "desativado_em", "foto"]
     actions = ["desativar_hoje", "reativar"]
 
     @admin.display(description="Código", ordering="numero")

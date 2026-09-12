@@ -22,9 +22,20 @@ class Bebedouro(models.Model):
     # Data em que o bebedouro saiu de operação por tempo indeterminado.
     # Vazio = em operação. Coletas anteriores a essa data não são afetadas.
     desativado_em = models.DateField("Desativado em", null=True, blank=True)
+    foto = models.ImageField("Foto", upload_to="bebedouros/fotos/", blank=True, null=True)
 
     class Meta:
         ordering = ["numero"]
+
+    def save(self, *args, **kwargs):
+        # Toda foto nova enviada é comprimida antes de gravar — evita que o
+        # espaço de armazenamento (limitado na hospedagem) dependa do
+        # tamanho da foto original enviada por quem tira a foto.
+        if self.foto and not self.foto._committed:
+            from . import services
+
+            services.comprimir_foto(self.foto)
+        super().save(*args, **kwargs)
 
     @property
     def codigo(self):

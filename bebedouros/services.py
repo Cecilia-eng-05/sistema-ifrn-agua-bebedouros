@@ -1,11 +1,33 @@
 import datetime
+import os
 from decimal import Decimal
+from io import BytesIO
 
+from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.utils.formats import number_format
+from PIL import Image
 
 from . import iqab
 from .models import Bebedouro, Coleta, Resultado, TrocaFiltro, formatar_turbidez
+
+FOTO_MAX_DIMENSAO = 1600
+FOTO_QUALIDADE = 82
+
+
+def comprimir_foto(campo_arquivo, max_dimensao=FOTO_MAX_DIMENSAO, qualidade=FOTO_QUALIDADE):
+    """Redimensiona (se preciso) e recomprime a imagem enviada, substituindo
+    o conteúdo do campo antes de gravar. Sempre salva como JPEG — formato
+    mais compacto para foto, e o único que este projeto espera guardar."""
+    imagem = Image.open(campo_arquivo)
+    imagem = imagem.convert("RGB")
+    imagem.thumbnail((max_dimensao, max_dimensao))
+
+    buffer = BytesIO()
+    imagem.save(buffer, format="JPEG", quality=qualidade, optimize=True)
+
+    nome = os.path.splitext(campo_arquivo.name)[0] + ".jpg"
+    campo_arquivo.save(nome, ContentFile(buffer.getvalue()), save=False)
 
 
 def linhas_faltantes(coleta):
