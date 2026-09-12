@@ -76,15 +76,30 @@ class SituacaoAtualBebedourosTests(TestCase):
         self.assertEqual(s1["resultado"], r_recente)
         self.assertEqual(s1["data"], datetime.date(2026, 9, 1))
 
-    def test_ignora_linha_vazia_e_fora_de_operacao_mais_recentes(self):
+    def test_ignora_linha_vazia_mais_recente(self):
         antiga = Coleta.objects.create(data=datetime.date(2026, 8, 1))
         recente = Coleta.objects.create(data=datetime.date(2026, 9, 1))
         r_antiga = Resultado.objects.create(coleta=antiga, bebedouro=self.b1, ph=Decimal("7.0"))
-        Resultado.objects.create(coleta=recente, bebedouro=self.b1, fora_de_operacao=True)
+        Resultado.objects.create(coleta=recente, bebedouro=self.b1)
         situacoes = situacao_atual_bebedouros()
         s1 = [s for s in situacoes if s["bebedouro"] == self.b1][0]
         self.assertEqual(s1["resultado"], r_antiga)
         self.assertEqual(s1["data"], datetime.date(2026, 8, 1))
+
+    def test_fora_de_operacao_mais_recente_e_a_situacao_atual(self):
+        """Fora de operação é uma situação real, não uma linha vazia — não
+        deve ser pulada em favor de uma classificação antiga (bug relatado:
+        o mapa mostrava a cor da última coleta válida em vez da gota vazia)."""
+        antiga = Coleta.objects.create(data=datetime.date(2026, 8, 1))
+        recente = Coleta.objects.create(data=datetime.date(2026, 9, 1))
+        Resultado.objects.create(coleta=antiga, bebedouro=self.b1, ph=Decimal("7.0"))
+        r_recente = Resultado.objects.create(
+            coleta=recente, bebedouro=self.b1, fora_de_operacao=True
+        )
+        situacoes = situacao_atual_bebedouros()
+        s1 = [s for s in situacoes if s["bebedouro"] == self.b1][0]
+        self.assertEqual(s1["resultado"], r_recente)
+        self.assertEqual(s1["data"], datetime.date(2026, 9, 1))
 
     def test_apenas_publicadas_ignora_rascunho(self):
         coleta = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.RASCUNHO)

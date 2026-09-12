@@ -50,6 +50,18 @@ class MapaTests(TestCase):
         response = self.client.get("/")
         self.assertContains(response, 'class="gota gota-md gota-excelente"')
 
+    def test_fora_de_operacao_mostra_gota_vazia_mesmo_com_classificacao_antiga(self):
+        b1 = Bebedouro.objects.create(numero=1)
+        antiga = Coleta.objects.create(data=datetime.date(2026, 8, 1), status=Coleta.PUBLICADO)
+        Resultado.objects.create(coleta=antiga, bebedouro=b1, **RESULTADO_COMPLETO)
+        recalcular_coleta(antiga)
+        recente = Coleta.objects.create(data=datetime.date(2026, 9, 1), status=Coleta.PUBLICADO)
+        Resultado.objects.create(coleta=recente, bebedouro=b1, fora_de_operacao=True)
+        recalcular_coleta(recente)
+        response = self.client.get("/")
+        self.assertContains(response, 'class="gota gota-md gota-vazia"')
+        self.assertNotContains(response, 'class="gota gota-md gota-excelente"')
+
     def test_rascunho_nao_aparece_no_mapa(self):
         Bebedouro.objects.create(numero=1)
         coleta = Coleta.objects.create(data=datetime.date.today(), status=Coleta.RASCUNHO)

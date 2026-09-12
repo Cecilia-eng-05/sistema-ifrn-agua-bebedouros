@@ -72,10 +72,14 @@ def publicar_coleta(coleta):
 
 
 def _ultimo_resultado_valido(bebedouro, apenas_publicadas=False):
-    """O Resultado mais recente deste bebedouro que tem algum dado de
-    verdade — pula linhas vazias e linhas marcadas 'fora de operação'.
-    Com apenas_publicadas=True, considera só coletas já publicadas (usado
-    pela página pública do bebedouro — DEFINICAO-DO-PROJETO.md §7)."""
+    """O Resultado mais recente deste bebedouro que tem alguma informação de
+    verdade — pula só as linhas totalmente vazias (nenhum dado preenchido,
+    tipicamente porque a quinzena ainda está sendo coletada). 'Fora de
+    operação' NÃO é pulado: é uma situação atual real, e deve prevalecer
+    sobre uma classificação antiga (ver alerta da orientadora sobre o
+    mapa mostrar a cor errada nesse caso). Com apenas_publicadas=True,
+    considera só coletas já publicadas (usado pela página pública do
+    bebedouro — DEFINICAO-DO-PROJETO.md §7)."""
     resultados = (
         Resultado.objects.filter(bebedouro=bebedouro)
         .select_related("coleta")
@@ -84,7 +88,7 @@ def _ultimo_resultado_valido(bebedouro, apenas_publicadas=False):
     if apenas_publicadas:
         resultados = resultados.filter(coleta__status=Coleta.PUBLICADO)
     for resultado in resultados:
-        if not resultado.fora_de_operacao and not resultado.esta_vazio():
+        if resultado.fora_de_operacao or not resultado.esta_vazio():
             return resultado
     return None
 
