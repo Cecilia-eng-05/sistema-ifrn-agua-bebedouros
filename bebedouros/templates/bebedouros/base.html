@@ -299,15 +299,22 @@
       box-shadow: 0 1px 3px rgba(10, 30, 40, 0.3);
     }
     .contato-grid {
-      display: grid; gap: 14px; margin: 22px auto 0; max-width: 700px;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+      margin: 26px auto 0; max-width: 700px;
     }
-    .contato-card {
-      background: var(--superficie); border: 1px solid var(--borda);
-      border-radius: 12px; padding: 14px 18px;
+    .contato-grid > div:first-child {
+      border-right: 1px solid var(--borda); padding-right: 24px;
     }
-    .contato-card h2 { font-size: 15px; margin: 0 0 8px; color: var(--profunda); }
-    .contato-card p { margin: 4px 0; font-size: 13px; color: var(--tinta-suave); }
+    .contato-grid h2 { font-size: 16px; margin: 0 0 8px; color: var(--profunda); }
+    .contato-grid p { margin: 4px 0; font-size: 13px; color: var(--tinta-suave); }
+    .contato-grid p strong { color: var(--tinta); }
+    @media (max-width: 480px) {
+      .contato-grid { grid-template-columns: 1fr; gap: 0; }
+      .contato-grid > div:first-child {
+        border-right: none; border-bottom: 1px solid var(--borda);
+        padding-right: 0; padding-bottom: 16px; margin-bottom: 16px;
+      }
+    }
     /* Aba "Entenda o IQA-B" (pública) */
     .iqab-secao { margin-top: 30px; }
     .iqab-secao > h2 {
