@@ -11,6 +11,9 @@
       é uma reprovação do ponto. Toque em um bebedouro para ver o histórico
       completo.
     </p>
+    {% if ultima_atualizacao %}
+      <p class="mapa-instrucao">Dados atualizados em {{ ultima_atualizacao|date:"d/m/Y" }}.</p>
+    {% endif %}
   </div>
 
   <section class="iqab-secao">

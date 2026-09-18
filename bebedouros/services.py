@@ -109,6 +109,13 @@ def ultimo_resultado(bebedouro, apenas_publicadas=False):
     return resultados.first()
 
 
+def ultima_coleta_publicada():
+    """Coleta publicada mais recente, para mostrar a data de última
+    atualização nas páginas públicas (mapa e alertas). None se ainda não
+    houver nenhuma coleta publicada."""
+    return Coleta.objects.filter(status=Coleta.PUBLICADO).first()
+
+
 def situacao_atual_bebedouros(apenas_publicadas=False):
     """Situação mais recente de cada bebedouro, para a tela Início e para
     o mapa público.

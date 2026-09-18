@@ -6,6 +6,9 @@
   <div class="mapa-cabecalho">
     <h1>Pontos de consumo de água do Campus Natal - Central</h1>
     <p class="mapa-descricao">Os bebedouros do IFRN-CNAT são monitorados por meio de análises realizadas quinzenalmente, como parte de um projeto desenvolvido pelo Núcleo de Pesquisa em Saneamento Básico. Os dados obtidos permitem acompanhar a qualidade da água e as condições dos pontos de consumo, contribuindo para uma gestão mais eficiente e segura.</p>
+    {% if ultima_atualizacao %}
+      <p class="mapa-instrucao">Dados atualizados em {{ ultima_atualizacao|date:"d/m/Y" }}.</p>
+    {% endif %}
     <p class="mapa-instrucao">Clique no ponto desejado para ver mais detalhes sobre a qualidade da água ali.</p>
   </div>
   <div class="mapa-wrap">

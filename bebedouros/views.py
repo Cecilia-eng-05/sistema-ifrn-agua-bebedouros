@@ -21,6 +21,7 @@ from .services import (
     situacao_atual_bebedouro,
     situacao_atual_bebedouros,
     situacao_filtro,
+    ultima_coleta_publicada,
     ultimo_resultado,
 )
 from .validation import avisos_para_resultado
@@ -57,7 +58,12 @@ def mapa(request):
         if posicao is None:
             continue
         pontos.append({**situacao, "x": posicao[0], "y": posicao[1]})
-    return render(request, "bebedouros/mapa.html", {"pontos": pontos})
+    coleta = ultima_coleta_publicada()
+    return render(
+        request,
+        "bebedouros/mapa.html",
+        {"pontos": pontos, "ultima_atualizacao": coleta.data if coleta else None},
+    )
 
 
 FAIXA_SLUGS = {
@@ -113,10 +119,14 @@ def entenda_iqab(request):
 
 def alertas_publico(request):
     situacoes = situacao_atual_bebedouros(apenas_publicadas=True)
+    coleta = ultima_coleta_publicada()
     return render(
         request,
         "bebedouros/alertas_publico.html",
-        {"alertas": alertas_publicos(situacoes)},
+        {
+            "alertas": alertas_publicos(situacoes),
+            "ultima_atualizacao": coleta.data if coleta else None,
+        },
     )
 
 
