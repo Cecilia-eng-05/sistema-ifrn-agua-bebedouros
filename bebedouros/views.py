@@ -34,7 +34,7 @@ from .validation import avisos_para_resultado
 POSICOES_MAPA = {
     1: (41.4, 14.8),
     2: (32.0, 18.1),
-    3: (15.8, 3.4),
+    3: (15.8, 5.0),
     4: (4.1, 26.6),
     5: (5.2, 40.5),
     6: (33.0, 48.6),
