@@ -56,14 +56,21 @@ exatos dos botões podem variar um pouco.
 ### Atualizando o site depois (nova versão do código)
 No Bash console do PythonAnywhere:
 ```
-cd Sistema_IFRN_Agua
+cd sistema-ifrn-agua-bebedouros
 git pull
 source .venv/bin/activate
+export DEBUG=0
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py collectstatic --noinput
 ```
 Depois clicar em "Reload" na aba Web de novo.
+
+**Importante sobre o `export DEBUG=0`:** o Bash console é uma sessão separada do site —
+ele não sabe sozinho que é produção. Sem essa linha, o `collectstatic` roda como se
+fosse ambiente de teste e não atualiza direito os arquivos estáticos (imagens, CSS),
+mesmo sem dar erro nenhum. Cole os comandos linha por linha (ou um de cada vez) — colar
+o bloco inteiro de uma vez pode corromper a primeira linha nesse console.
 
 ## Backup
 Fazer backup do arquivo `db.sqlite3` de vez em quando (ele guarda todos os
